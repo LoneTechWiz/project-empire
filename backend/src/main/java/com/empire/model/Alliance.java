@@ -40,6 +40,10 @@ public class Alliance {
     @Builder.Default
     private String discordLink = "";
 
+    @Builder.Default
+    @Column(columnDefinition = "TEXT")
+    private String roles = "[]";
+
     @CreationTimestamp
     private LocalDateTime foundedDate;
 
