@@ -17,7 +17,12 @@
       "Bash(pg_lsclusters:*)",
       "Bash(dpkg:*)",
       "Bash(mvn clean:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(sudo service:*)",
+      "Bash(pg_isready:*)",
+      "Bash(mvn spring-boot:run:*)",
+      "Bash(psql:*)",
+      "Bash(PGPASSWORD=empire psql:*)"
     ]
   }
 }
