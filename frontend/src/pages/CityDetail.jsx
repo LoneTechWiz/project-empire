@@ -15,9 +15,9 @@ const IMP_LABELS = {
 }
 // Static effects per improvement. Farm food is dynamic (land-based), handled separately.
 const IMP_EFFECTS = {
-  impCoalpower:        ['+500 ⚡'],
-  impOilpower:         ['+500 ⚡'],
-  impNuclearpower:     ['+2000 ⚡'],
+  impCoalpower:        ['+500 ⚡', '-1.2 coal'],
+  impOilpower:         ['+500 ⚡', '-1.5 oil'],
+  impNuclearpower:     ['+2000 ⚡', '-2.4 uranium'],
   impWindpower:        ['+250 ⚡'],
   impCoalmine:         ['+3 coal', '-3 ⚡'],
   impOilwell:          ['+3 oil', '-3 ⚡'],

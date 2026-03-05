@@ -86,6 +86,11 @@ public class EconomyEngine {
         for (String r : RESOURCES) d.put(r, 0.0);
         d.put("money", 0.0);
 
+        // Power plant fuel consumption (always consumed regardless of powered status)
+        d.merge("coal",    -c.getImpCoalpower()    * 1.2, Double::sum);
+        d.merge("oil",     -c.getImpOilpower()     * 1.5, Double::sum);
+        d.merge("uranium", -c.getImpNuclearpower() * 2.4, Double::sum);
+
         // Raw resources
         d.merge("coal",     c.getImpCoalmine()     * 3.0  * powerMult, Double::sum);
         d.merge("oil",      c.getImpOilwell()       * 3.0  * powerMult, Double::sum);
