@@ -9,7 +9,15 @@
       "Bash(source:*)",
       "Bash(export:*)",
       "Bash(python3:*)",
-      "Bash(/home/devin/dev/project-empire/.gitignore:*)"
+      "Bash(/home/devin/dev/project-empire/.gitignore:*)",
+      "Read(//usr/lib/**)",
+      "Read(//usr/local/lib/**)",
+      "Bash(apt-cache show openjdk-21-jdk)",
+      "Bash(java:*)",
+      "Bash(pg_lsclusters:*)",
+      "Bash(dpkg:*)",
+      "Bash(mvn clean:*)",
+      "Bash(ls:*)"
     ]
   }
 }

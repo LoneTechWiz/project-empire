@@ -1,0 +1,202 @@
+package com.empire.controller;
+
+import com.empire.dto.ApiResponse;
+import com.empire.game.WarEngine;
+import com.empire.model.*;
+import com.empire.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+
+@RestController
+@RequestMapping("/api/wars")
+@RequiredArgsConstructor
+public class WarController {
+
+    private final WarRepository warRepo;
+    private final WarAttackRepository attackRepo;
+    private final NationRepository nationRepo;
+    private final UserRepository userRepo;
+    private final CityRepository cityRepo;
+    private final ActivityLogRepository activityLogRepo;
+    private final WarEngine warEngine;
+
+    private Nation requireNation(UserDetails ud) {
+        User user = userRepo.findByUsername(ud.getUsername()).orElseThrow();
+        return nationRepo.findByUser(user).orElseThrow();
+    }
+
+    @GetMapping
+    public ResponseEntity<?> list(@AuthenticationPrincipal UserDetails ud) {
+        Nation nation = requireNation(ud);
+        return ResponseEntity.ok(ApiResponse.ok(Map.of(
+            "offensive", warRepo.findByAttackerAndStatus(nation, "active"),
+            "defensive", warRepo.findByDefenderAndStatus(nation, "active"),
+            "past",      warRepo.findPastWars(nation)
+        )));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> get(@PathVariable Long id, @AuthenticationPrincipal UserDetails ud) {
+        War war = warRepo.findById(id).orElse(null);
+        if (war == null) return ResponseEntity.notFound().build();
+        Nation nation = requireNation(ud);
+        List<WarAttack> attacks = attackRepo.findByWarOrderByDateDesc(war);
+        boolean isAttacker = war.getAttacker().getId().equals(nation.getId());
+        boolean isDefender = war.getDefender().getId().equals(nation.getId());
+        long attacksToday = attackRepo.countByWarAndAttackerAndDateAfter(
+            war, nation, LocalDate.now().atStartOfDay());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of(
+            "war", war, "attacks", attacks,
+            "isAttacker", isAttacker, "isDefender", isDefender,
+            "attacksToday", attacksToday
+        )));
+    }
+
+    @PostMapping("/declare/{targetId}")
+    public ResponseEntity<?> declare(@PathVariable Long targetId,
+                                     @RequestBody(required = false) Map<String, String> body,
+                                     @AuthenticationPrincipal UserDetails ud) {
+        Nation attacker = requireNation(ud);
+        Nation defender = nationRepo.findById(targetId).orElse(null);
+        if (defender == null) return fail("Nation not found.");
+        if (defender.getId().equals(attacker.getId())) return fail("Cannot attack yourself.");
+        if (defender.getBeigeTurns() > 0) return fail("Target is on beige protection.");
+        if (attacker.getBeigeTurns() > 0) return fail("You are on beige protection.");
+
+        if (warRepo.countByAttackerAndStatus(attacker, "active") >= 5)
+            return fail("Max offensive wars reached.");
+        if (warRepo.countByDefenderAndStatus(defender, "active") >= 3)
+            return fail("Target has max defensive wars.");
+        if (warRepo.findByAttackerAndDefenderAndStatus(attacker, defender, "active").isPresent())
+            return fail("Already at war with this nation.");
+
+        String reason = body != null ? body.getOrDefault("reason", "") : "";
+        War war = warRepo.save(War.builder().attacker(attacker).defender(defender).reason(reason).build());
+
+        activityLogRepo.save(ActivityLog.builder().nation(attacker)
+            .message(attacker.getName() + " declared war on " + defender.getName() + ".").build());
+        activityLogRepo.save(ActivityLog.builder().nation(defender)
+            .message(attacker.getName() + " declared war on " + defender.getName() + ".").build());
+
+        return ResponseEntity.ok(ApiResponse.ok(war));
+    }
+
+    @PostMapping("/{id}/attack")
+    public ResponseEntity<?> attack(@PathVariable Long id,
+                                    @RequestBody Map<String, String> body,
+                                    @AuthenticationPrincipal UserDetails ud) {
+        War war = warRepo.findById(id).orElse(null);
+        if (war == null || !"active".equals(war.getStatus())) return fail("War not active.");
+
+        Nation attacker = requireNation(ud);
+        boolean isAttacker = war.getAttacker().getId().equals(attacker.getId());
+        boolean isDefender = war.getDefender().getId().equals(attacker.getId());
+        if (!isAttacker && !isDefender) return fail("Not a participant.");
+
+        long attacksToday = attackRepo.countByWarAndAttackerAndDateAfter(
+            war, attacker, LocalDate.now().atStartOfDay());
+        if (attacksToday >= 3) return fail("No action points remaining today.");
+
+        String attackType = body.get("attackType");
+        Nation defender = isAttacker ? war.getDefender() : war.getAttacker();
+        Nation freshAttacker = nationRepo.findById(attacker.getId()).orElseThrow();
+        Nation freshDefender = nationRepo.findById(defender.getId()).orElseThrow();
+
+        WarAttack attack = warEngine.resolveAttack(attackType, freshAttacker, freshDefender, war)
+            .war(war).attacker(freshAttacker).build();
+
+        attackRepo.save(attack);
+
+        if (attack.isSuccess()) {
+            // Apply attacker casualties
+            freshAttacker.setSoldiers(Math.max(0, freshAttacker.getSoldiers() - attack.getAttackerSoldierCasualties()));
+            freshAttacker.setTanks(Math.max(0, freshAttacker.getTanks() - attack.getAttackerTankCasualties()));
+            freshAttacker.setAircraft(Math.max(0, freshAttacker.getAircraft() - attack.getAttackerAircraftCasualties()));
+            freshAttacker.setShips(Math.max(0, freshAttacker.getShips() - attack.getAttackerShipCasualties()));
+            freshAttacker.setSoldierCasualties(freshAttacker.getSoldierCasualties() + attack.getAttackerSoldierCasualties());
+
+            // Apply defender casualties
+            freshDefender.setSoldiers(Math.max(0, freshDefender.getSoldiers() - attack.getDefenderSoldierCasualties()));
+            freshDefender.setTanks(Math.max(0, freshDefender.getTanks() - attack.getDefenderTankCasualties()));
+            freshDefender.setAircraft(Math.max(0, freshDefender.getAircraft() - attack.getDefenderAircraftCasualties()));
+            freshDefender.setShips(Math.max(0, freshDefender.getShips() - attack.getDefenderShipCasualties()));
+            freshDefender.setSoldierCasualties(freshDefender.getSoldierCasualties() + attack.getDefenderSoldierCasualties());
+
+            // Loot and infra
+            if (attack.getMoneyLooted() > 0) {
+                freshDefender.setMoney(Math.max(0, freshDefender.getMoney() - attack.getMoneyLooted()));
+                freshAttacker.setMoney(freshAttacker.getMoney() + attack.getMoneyLooted());
+            }
+            if (attack.getInfraDestroyed() > 0) {
+                cityRepo.findByNation(freshDefender).stream().findFirst().ifPresent(c -> {
+                    c.setInfrastructure(Math.max(0, c.getInfrastructure() - attack.getInfraDestroyed()));
+                    cityRepo.save(c);
+                });
+            }
+            if ("missile".equals(attackType)) freshAttacker.setMissiles(Math.max(0, freshAttacker.getMissiles() - 1));
+            if ("nuke".equals(attackType)) freshAttacker.setNukes(Math.max(0, freshAttacker.getNukes() - 1));
+
+            // Update resistance
+            if (isAttacker) war.setDefenderResistance(Math.max(0, war.getDefenderResistance() - attack.getResistanceChange()));
+            else war.setAttackerResistance(Math.max(0, war.getAttackerResistance() - attack.getResistanceChange()));
+
+            // Check end
+            String outcome = warEngine.determineOutcome(war.getAttackerResistance(), war.getDefenderResistance());
+            if (outcome != null) {
+                war.setStatus("peace");
+                war.setEndDate(LocalDateTime.now());
+                Nation winner = "attacker_victory".equals(outcome) ? freshAttacker : freshDefender;
+                Nation loser  = "attacker_victory".equals(outcome) ? freshDefender : freshAttacker;
+                if ("attacker_victory".equals(outcome)) {
+                    freshAttacker.setOffensiveWarsWon(freshAttacker.getOffensiveWarsWon() + 1);
+                    freshDefender.setDefensiveWarsLost(freshDefender.getDefensiveWarsLost() + 1);
+                    freshDefender.setBeigeTurns(3);
+                } else {
+                    freshDefender.setDefensiveWarsWon(freshDefender.getDefensiveWarsWon() + 1);
+                    freshAttacker.setOffensiveWarsLost(freshAttacker.getOffensiveWarsLost() + 1);
+                    freshAttacker.setBeigeTurns(3);
+                }
+                activityLogRepo.save(ActivityLog.builder().nation(winner)
+                    .message("Won war! (War #" + war.getId() + ")").build());
+                activityLogRepo.save(ActivityLog.builder().nation(loser)
+                    .message("Lost war. (War #" + war.getId() + ")").build());
+            }
+        } else {
+            // Failed: attacker still takes some casualties
+            freshAttacker.setSoldiers(Math.max(0, freshAttacker.getSoldiers() - attack.getAttackerSoldierCasualties()));
+            freshAttacker.setTanks(Math.max(0, freshAttacker.getTanks() - attack.getAttackerTankCasualties()));
+        }
+
+        nationRepo.save(freshAttacker);
+        nationRepo.save(freshDefender);
+        warRepo.save(war);
+
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("attack", attack, "war", warRepo.findById(id).orElseThrow())));
+    }
+
+    @PostMapping("/{id}/peace")
+    public ResponseEntity<?> peace(@PathVariable Long id,
+                                   @AuthenticationPrincipal UserDetails ud) {
+        War war = warRepo.findById(id).orElse(null);
+        if (war == null || !"active".equals(war.getStatus())) return fail("War not active.");
+        Nation nation = requireNation(ud);
+        if (!war.getAttacker().getId().equals(nation.getId()) && !war.getDefender().getId().equals(nation.getId()))
+            return fail("Not a participant.");
+
+        war.setStatus("peace");
+        war.setEndDate(LocalDateTime.now());
+        warRepo.save(war);
+        return ResponseEntity.ok(ApiResponse.ok("Peace declared."));
+    }
+
+    private ResponseEntity<?> fail(String msg) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(msg));
+    }
+}
