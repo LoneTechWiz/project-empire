@@ -186,6 +186,63 @@ public class CityController {
         }
     }
 
+    @PostMapping("/{sourceId}/copy-to/{targetId}")
+    public ResponseEntity<?> copyLayout(@PathVariable Long sourceId, @PathVariable Long targetId,
+                                        @AuthenticationPrincipal UserDetails ud) {
+        if (sourceId.equals(targetId))
+            return ResponseEntity.badRequest().body(ApiResponse.error("Source and target must be different cities."));
+        Nation nation = requireNation(ud);
+        City source = cityRepo.findByIdAndNation(sourceId, nation).orElse(null);
+        City target = cityRepo.findByIdAndNation(targetId, nation).orElse(null);
+        if (source == null || target == null) return ResponseEntity.notFound().build();
+
+        try {
+            double netCost = 0;
+            int totalSlotsNeeded = 0;
+            Map<String, int[]> counts = new LinkedHashMap<>();
+
+            for (String imp : IMP_COSTS.keySet()) {
+                Field f = City.class.getDeclaredField(imp);
+                f.setAccessible(true);
+                int srcCount = (int) f.get(source);
+                int tgtCount = (int) f.get(target);
+                counts.put(imp, new int[]{srcCount, tgtCount});
+                totalSlotsNeeded += srcCount;
+
+                int delta = srcCount - tgtCount;
+                if (delta > 0) {
+                    for (int i = tgtCount; i < srcCount; i++)
+                        netCost += IMP_COSTS.get(imp) * (1 + i * 0.5);
+                } else if (delta < 0) {
+                    for (int i = srcCount; i < tgtCount; i++)
+                        netCost -= IMP_COSTS.get(imp) * 0.25;
+                }
+            }
+
+            int targetSlots = (int)(target.getInfrastructure() / 25);
+            if (totalSlotsNeeded > targetSlots)
+                return ResponseEntity.badRequest().body(ApiResponse.error(
+                    "Target city needs " + totalSlotsNeeded + " slots but only has " + targetSlots + ". Upgrade its infrastructure first."));
+
+            if (nation.getMoney() < netCost)
+                return ResponseEntity.badRequest().body(ApiResponse.error(
+                    "Not enough money. Net cost: $" + String.format("%,.0f", netCost) + "."));
+
+            for (Map.Entry<String, int[]> e : counts.entrySet()) {
+                Field f = City.class.getDeclaredField(e.getKey());
+                f.setAccessible(true);
+                f.set(target, e.getValue()[0]);
+            }
+            nation.setMoney(nation.getMoney() - netCost);
+            cityRepo.save(target);
+            nationRepo.save(nation);
+
+            return ResponseEntity.ok(ApiResponse.ok(Map.of("city", target, "netCost", netCost)));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to copy layout."));
+        }
+    }
+
     @PostMapping("/{id}/infra")
     public ResponseEntity<?> upgradeInfra(@PathVariable Long id,
                                           @RequestBody Map<String, Double> body,

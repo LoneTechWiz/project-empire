@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
 import api from '../api/client'
@@ -179,6 +179,8 @@ export default function CityDetail() {
         </div>
       </div>
 
+      <CopyLayout sourceCity={city} impCosts={impCosts} />
+
       {Object.entries(IMP_CATEGORIES).map(([cat, imps]) => (
         <div key={cat} className="card" style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 600, marginBottom: 12 }}>{cat}</div>
@@ -211,6 +213,90 @@ export default function CityDetail() {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+function CopyLayout({ sourceCity, impCosts }) {
+  const qc = useQueryClient()
+  const [targetId, setTargetId] = useState('')
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const { data: citiesData } = useQuery({
+    queryKey: ['cities'],
+    queryFn: () => api.get('/cities').then(r => r.data.data),
+  })
+
+  const otherCities = citiesData?.cities?.filter(c => c.city.id !== sourceCity.id) || []
+  const targetEntry = otherCities.find(c => String(c.city.id) === targetId)
+
+  const netCost = useMemo(() => {
+    if (!targetEntry || !impCosts) return null
+    const target = targetEntry.city
+    let cost = 0
+    for (const [imp, baseCost] of Object.entries(impCosts)) {
+      const srcCount = sourceCity[imp] || 0
+      const tgtCount = target[imp] || 0
+      const delta = srcCount - tgtCount
+      if (delta > 0) {
+        for (let i = tgtCount; i < srcCount; i++) cost += baseCost * (1 + i * 0.5)
+      } else if (delta < 0) {
+        for (let i = srcCount; i < tgtCount; i++) cost -= baseCost * 0.25
+      }
+    }
+    return cost
+  }, [targetId, sourceCity, impCosts, otherCities])
+
+  const copyMut = useMutation({
+    mutationFn: () => api.post(`/cities/${sourceCity.id}/copy-to/${targetId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cities'] })
+      qc.invalidateQueries({ queryKey: ['nation-mine'] })
+      setSuccess(`Layout copied to ${targetEntry.city.name}.`)
+      setTargetId('')
+      setTimeout(() => setSuccess(''), 4000)
+    },
+    onError: err => setError(err.response?.data?.message || 'Failed to copy layout.'),
+  })
+
+  if (otherCities.length === 0) return null
+
+  const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })
+
+  return (
+    <div className="card" style={{ marginBottom: 16 }}>
+      <div style={{ fontWeight: 600, marginBottom: 12 }}>Copy Layout to Another City</div>
+      {error && <div className="alert alert-error" onClick={() => setError('')}>{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <select
+          value={targetId}
+          onChange={e => { setTargetId(e.target.value); setError('') }}
+          style={{ flex: 1, minWidth: 160 }}
+        >
+          <option value="">Select target city…</option>
+          {otherCities.map(({ city }) => (
+            <option key={city.id} value={city.id}>{city.name}</option>
+          ))}
+        </select>
+        {targetEntry && netCost !== null && (
+          <span style={{ fontWeight: 600, fontSize: 13, color: netCost > 0 ? 'var(--red)' : 'var(--green)', whiteSpace: 'nowrap' }}>
+            {netCost > 0 ? `Cost: $${fmt(netCost)}` : `Refund: $${fmt(-netCost)}`}
+          </span>
+        )}
+        <button
+          onClick={() => { setError(''); copyMut.mutate() }}
+          disabled={!targetId || copyMut.isPending}
+        >
+          {copyMut.isPending ? 'Copying…' : 'Apply'}
+        </button>
+      </div>
+      {targetEntry && (
+        <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 8 }}>
+          Builds missing improvements and demolishes extras on <strong>{targetEntry.city.name}</strong>. Target city must have enough infrastructure slots.
+        </div>
+      )}
     </div>
   )
 }
