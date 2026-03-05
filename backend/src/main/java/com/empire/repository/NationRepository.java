@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface NationRepository extends JpaRepository<Nation, Long> {
     Optional<Nation> findByUser(User user);
-    Optional<Nation> findByUserId(Long userId);
+    Optional<Nation> findByUser_Id(Long userId);
     boolean existsByName(String name);
     List<Nation> findByNameContainingIgnoreCaseOrLeaderNameContainingIgnoreCase(String name, String leaderName);
 

@@ -8,8 +8,7 @@ import java.util.Optional;
 
 public interface CityRepository extends JpaRepository<City, Long> {
     List<City> findByNation(Nation nation);
-    List<City> findByNationId(Long nationId);
+    List<City> findByNation_Id(Long nationId);
     Optional<City> findByIdAndNation(Long id, Nation nation);
     long countByNation(Nation nation);
-    Optional<City> findFirstByNationOrderByRandom();
 }
