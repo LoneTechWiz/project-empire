@@ -1,0 +1,61 @@
+<%- include('partials/header', { title: 'Welcome' }) %>
+
+<div class="hero">
+  <div class="hero-content">
+    <h1>⚔️ Nations of Empire</h1>
+    <p class="hero-sub">Build your nation. Forge alliances. Conquer the world.</p>
+    <div class="hero-actions">
+      <a href="/register" class="btn btn-large btn-primary">Create Your Nation</a>
+      <a href="/login" class="btn btn-large btn-secondary">Login</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <span class="stat-number"><%= nationCount %></span>
+        <span class="stat-label">Nations</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number"><%= allianceCount %></span>
+        <span class="stat-label">Alliances</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number"><%= warCount %></span>
+        <span class="stat-label">Active Wars</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="features-grid">
+  <div class="feature-card">
+    <div class="feature-icon">🏙️</div>
+    <h3>Build Cities</h3>
+    <p>Develop your cities with infrastructure, industries, power plants, and commerce improvements to generate resources and revenue.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">⚔️</div>
+    <h3>Wage War</h3>
+    <p>Declare war on rival nations. Launch ground attacks, airstrikes, naval battles, missile strikes, and nuclear weapons.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🤝</div>
+    <h3>Form Alliances</h3>
+    <p>Join or create alliances with other nations. Share resources through the alliance bank and coordinate strategies.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">📈</div>
+    <h3>Trade Resources</h3>
+    <p>Buy and sell resources on the global market. Post offers for food, coal, oil, steel, aluminum, and more.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🏛️</div>
+    <h3>Govern Your Nation</h3>
+    <p>Choose your government type, national policies, and war strategy to shape your nation's identity and bonuses.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🏆</div>
+    <h3>Climb the Rankings</h3>
+    <p>Compete for the top spots in military strength, economic power, and overall nation score on the global leaderboard.</p>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

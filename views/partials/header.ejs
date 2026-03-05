@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' | ' : '' %>Nations of Empire</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">
+    <a href="/">⚔️ Nations of Empire</a>
+  </div>
+  <div class="nav-links">
+    <% if (user) { %>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/nation/<%= nation ? nation.id : '' %>">My Nation</a>
+      <a href="/cities">Cities</a>
+      <a href="/military">Military</a>
+      <a href="/wars">Wars</a>
+      <a href="/alliances">Alliances</a>
+      <a href="/trade">Trade</a>
+      <a href="/rankings">Rankings</a>
+      <a href="/messages" class="<%= unreadMessages > 0 ? 'has-unread' : '' %>">
+        Messages<% if (unreadMessages > 0) { %> <span class="badge"><%= unreadMessages %></span><% } %>
+      </a>
+      <a href="/search">Search</a>
+      <div class="nav-user">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="btn-logout">Logout</a>
+      </div>
+    <% } else { %>
+      <a href="/login">Login</a>
+      <a href="/register" class="btn-primary">Register</a>
+    <% } %>
+  </div>
+</nav>
+<% if (nation && nation.beige_turns > 0) { %>
+<div class="beige-banner">
+  🛡️ You are on Beige protection (<%= nation.beige_turns %> turns remaining) - You cannot be attacked.
+</div>
+<% } %>
+<main class="container">

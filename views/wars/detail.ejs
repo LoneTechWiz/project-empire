@@ -1,0 +1,132 @@
+<%- include('../partials/header', { title: 'War #' + war.id }) %>
+
+<div class="page-header">
+  <h1>⚔️ War #<%= war.id %></h1>
+  <span class="war-status-badge <%= war.status %>"><%= war.status.toUpperCase() %></span>
+  <% if (war.reason) { %><p>Reason: <em><%= war.reason %></em></p><% } %>
+</div>
+
+<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+<% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+
+<!-- War Overview -->
+<div class="war-overview-panel">
+  <div class="war-side attacker">
+    <img src="<%= war.attacker_flag %>" class="war-flag-large" onerror="this.src='/img/default_flag.png'">
+    <h2><a href="/nation/<%= war.attacker_id %>"><%= war.attacker_name %></a></h2>
+    <p class="war-side-label">Attacker</p>
+    <div class="resist-display">
+      <div class="resist-number"><%= war.attacker_resistance %>%</div>
+      <div class="resist-bar-full">
+        <div class="resist-fill atk" style="width:<%= war.attacker_resistance %>%"></div>
+      </div>
+    </div>
+    <div class="war-side-military">
+      <span>👥 <%= formatNumber(war.a_soldiers) %></span>
+      <span>🚗 <%= formatNumber(war.a_tanks) %></span>
+      <span>✈️ <%= formatNumber(war.a_aircraft) %></span>
+      <span>🚢 <%= formatNumber(war.a_ships) %></span>
+    </div>
+  </div>
+
+  <div class="war-center">
+    <div class="war-controls">
+      <div>⬡ Ground: <strong><%= war.ground_control === 'none' ? 'Contested' : war.ground_control %></strong></div>
+      <div>✈️ Air: <strong><%= war.air_control === 'none' ? 'Contested' : war.air_control %></strong></div>
+      <div>🚢 Naval: <strong><%= war.naval_control === 'none' ? 'Contested' : war.naval_control %></strong></div>
+    </div>
+    <div class="vs-badge">VS</div>
+    <div class="war-started">Started: <%= new Date(war.start_date).toLocaleDateString() %></div>
+  </div>
+
+  <div class="war-side defender">
+    <img src="<%= war.defender_flag %>" class="war-flag-large" onerror="this.src='/img/default_flag.png'">
+    <h2><a href="/nation/<%= war.defender_id %>"><%= war.defender_name %></a></h2>
+    <p class="war-side-label">Defender</p>
+    <div class="resist-display">
+      <div class="resist-number"><%= war.defender_resistance %>%</div>
+      <div class="resist-bar-full">
+        <div class="resist-fill def" style="width:<%= war.defender_resistance %>%"></div>
+      </div>
+    </div>
+    <div class="war-side-military">
+      <span>👥 <%= formatNumber(war.d_soldiers) %></span>
+      <span>🚗 <%= formatNumber(war.d_tanks) %></span>
+      <span>✈️ <%= formatNumber(war.d_aircraft) %></span>
+      <span>🚢 <%= formatNumber(war.d_ships) %></span>
+    </div>
+  </div>
+</div>
+
+<!-- Attack Controls -->
+<% if (isParticipant && war.status === 'active') { %>
+<div class="panel attack-panel">
+  <h2>Launch Attack</h2>
+  <p class="text-muted">You have used <%= attacks.filter(a => a.attacker_id === nation.id && new Date(a.date).toDateString() === new Date().toDateString()).length %>/3 attacks today.</p>
+  <div class="attack-buttons">
+    <form method="POST" action="/wars/<%= war.id %>/attack" style="display:inline">
+      <input type="hidden" name="attack_type" value="ground">
+      <button class="btn btn-warning">⚔️ Ground Attack</button>
+    </form>
+    <form method="POST" action="/wars/<%= war.id %>/attack" style="display:inline">
+      <input type="hidden" name="attack_type" value="airstrike">
+      <button class="btn btn-warning">✈️ Airstrike</button>
+    </form>
+    <form method="POST" action="/wars/<%= war.id %>/attack" style="display:inline">
+      <input type="hidden" name="attack_type" value="naval">
+      <button class="btn btn-warning">🚢 Naval Attack</button>
+    </form>
+    <form method="POST" action="/wars/<%= war.id %>/attack" style="display:inline">
+      <input type="hidden" name="attack_type" value="missile">
+      <button class="btn btn-danger">🚀 Missile Strike</button>
+    </form>
+    <form method="POST" action="/wars/<%= war.id %>/attack" style="display:inline">
+      <input type="hidden" name="attack_type" value="nuke">
+      <button class="btn btn-danger">☢️ Nuclear Strike</button>
+    </form>
+  </div>
+  <form method="POST" action="/wars/<%= war.id %>/peace" style="margin-top:16px">
+    <button class="btn btn-secondary">🕊️ Offer Peace</button>
+  </form>
+</div>
+<% } %>
+
+<!-- War Stats -->
+<div class="panel">
+  <h2>📊 War Statistics</h2>
+  <div class="war-stats-grid">
+    <div><strong>Attacker Infra Destroyed:</strong> <%= formatDecimal(war.attacker_infra_destroyed, 0) %></div>
+    <div><strong>Defender Infra Destroyed:</strong> <%= formatDecimal(war.defender_infra_destroyed, 0) %></div>
+    <div><strong>Attacker Money Looted:</strong> <%= formatMoney(war.attacker_money_looted) %></div>
+    <div><strong>Defender Money Looted:</strong> <%= formatMoney(war.defender_money_looted) %></div>
+  </div>
+</div>
+
+<!-- Attack Log -->
+<div class="panel">
+  <h2>📜 Battle Log</h2>
+  <% if (attacks.length === 0) { %>
+    <p class="text-muted">No attacks yet.</p>
+  <% } else { %>
+    <div class="attack-log">
+      <% attacks.forEach(a => { %>
+        <div class="attack-entry <%= a.success ? 'success' : 'fail' %>">
+          <span class="attack-icon">
+            <%= a.attack_type === 'ground' ? '⚔️' : a.attack_type === 'airstrike' ? '✈️' : a.attack_type === 'naval' ? '🚢' : a.attack_type === 'missile' ? '🚀' : '☢️' %>
+          </span>
+          <span class="attack-nation"><%= a.attacker_nation_name %></span>
+          <span class="attack-type"><%= a.attack_type %></span>
+          <span class="attack-result"><%= a.success ? '✅ Success' : '❌ Failed' %></span>
+          <span class="attack-infra"><%= a.infra_destroyed > 0 ? `💥 ${formatDecimal(a.infra_destroyed,0)} infra` : '' %></span>
+          <span class="attack-loot"><%= a.money_looted > 0 ? `💰 ${formatMoney(a.money_looted)}` : '' %></span>
+          <% if (a.notes) { %><span class="attack-notes"><%= a.notes %></span><% } %>
+          <span class="attack-time"><%= timeAgo(a.date) %></span>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<a href="/wars" class="btn btn-secondary">← Back to Wars</a>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,49 @@
+<%- include('../partials/header', { title: 'Cities' }) %>
+<div class="page-header">
+  <h1>🏙️ Cities (<%= cities.length %>)</h1>
+  <p>Money: <strong><%= formatMoney(nation.money) %></strong></p>
+</div>
+
+<% if (error) { %><div class="alert alert-error"><%= decodeURIComponent(error) %></div><% } %>
+<% if (success) { %><div class="alert alert-success"><%= decodeURIComponent(success) %></div><% } %>
+
+<div class="panel">
+  <h2>Buy New City — Cost: <%= formatMoney(buyCost) %></h2>
+  <form method="POST" action="/cities/buy" class="inline-form">
+    <input type="text" name="city_name" placeholder="City name" required>
+    <button type="submit" class="btn btn-primary" <%= nation.money < buyCost ? 'disabled' : '' %>>
+      🏙️ Found City (<%= formatMoney(buyCost) %>)
+    </button>
+  </form>
+</div>
+
+<div class="city-cards">
+  <% cities.forEach(city => { %>
+  <div class="city-card">
+    <div class="city-card-header">
+      <h3><a href="/cities/<%= city.id %>"><%= city.name %></a></h3>
+      <span class="city-power-badge <%= city.power.powered ? 'powered' : 'unpowered' %>">
+        <%= city.power.powered ? '⚡' : '🔴' %> <%= city.power.available.toFixed(0) %>/<%= city.power.needed.toFixed(0) %> MW
+      </span>
+    </div>
+    <div class="city-card-stats">
+      <div class="city-stat"><span>Infrastructure</span><strong><%= formatDecimal(city.infrastructure, 0) %></strong></div>
+      <div class="city-stat"><span>Land</span><strong><%= formatDecimal(city.land, 0) %> mi²</strong></div>
+      <div class="city-stat"><span>Commerce</span><strong><%= city.commerce %>%</strong></div>
+    </div>
+    <div class="city-production">
+      <span class="prod-label">Production/turn:</span>
+      <% for (const [r, v] of Object.entries(city.production)) { %>
+        <% if (v !== 0) { %>
+          <span class="prod-item <%= v > 0 ? 'pos' : 'neg' %>">
+            <%= resourceIcon(r) %> <%= v > 0 ? '+' : '' %><%= formatDecimal(v, 1) %> <%= r %>
+          </span>
+        <% } %>
+      <% } %>
+    </div>
+    <a href="/cities/<%= city.id %>" class="btn btn-secondary btn-sm">Manage City</a>
+  </div>
+  <% }) %>
+</div>
+
+<%- include('../partials/footer') %>

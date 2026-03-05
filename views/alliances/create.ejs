@@ -1,0 +1,42 @@
+<%- include('../partials/header', { title: 'Create Alliance' }) %>
+<div class="page-header"><h1>🤝 Create Alliance</h1></div>
+<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+<form method="POST" action="/alliances/create" class="form-card">
+  <div class="form-row">
+    <div class="form-group">
+      <label>Alliance Name *</label>
+      <input type="text" name="name" value="<%= values.name || '' %>" required minlength="3" maxlength="50">
+    </div>
+    <div class="form-group">
+      <label>Acronym *</label>
+      <input type="text" name="acronym" value="<%= values.acronym || '' %>" required maxlength="8" placeholder="e.g. NATO">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Description</label>
+    <textarea name="description" rows="3"><%= values.description || '' %></textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Forum Link</label>
+      <input type="url" name="forum_link" value="<%= values.forum_link || '' %>" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label>Discord Link</label>
+      <input type="url" name="discord_link" value="<%= values.discord_link || '' %>" placeholder="https://discord.gg/...">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Color</label>
+    <div class="color-picker">
+      <% COLORS.forEach(c => { %>
+        <label class="color-option">
+          <input type="radio" name="color" value="<%= c %>" <%= (!values.color && c === 'gray') || values.color === c ? 'checked' : '' %>>
+          <span class="color-swatch" style="background-color: <%= c %>;"></span>
+        </label>
+      <% }) %>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Found Alliance</button>
+</form>
+<%- include('../partials/footer') %>

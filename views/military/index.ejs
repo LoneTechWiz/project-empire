@@ -1,0 +1,72 @@
+<%- include('../partials/header', { title: 'Military' }) %>
+
+<div class="page-header">
+  <h1>⚔️ Military Command</h1>
+  <p>Money: <strong><%= formatMoney(nation.money) %></strong> &bull; Food: <strong><%= formatNumber(nation.food) %></strong> &bull; Steel: <strong><%= formatNumber(nation.steel) %></strong></p>
+</div>
+
+<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+<% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+
+<div class="military-overview">
+  <% const units = [
+    { key: 'soldiers', icon: '👥', name: 'Soldiers', cost: '5 money + 0.01 food each' },
+    { key: 'tanks', icon: '🚗', name: 'Tanks', cost: '60 money + 0.5 steel + 0.1 gas each' },
+    { key: 'aircraft', icon: '✈️', name: 'Aircraft', cost: '4,000 money + 5 alum + 5 gas each' },
+    { key: 'ships', icon: '🚢', name: 'Ships', cost: '50,000 money + 30 steel + 20 alum each' },
+    { key: 'spies', icon: '🕵️', name: 'Spies', cost: '50,000 money each' },
+    { key: 'missiles', icon: '🚀', name: 'Missiles', cost: '150K + 100 alum + 75 gas + 75 mun each' },
+    { key: 'nukes', icon: '☢️', name: 'Nuclear Weapons', cost: '1.75M + 750 alum + 500 gas + 375 mun + 250 ura each' },
+  ]; %>
+
+  <% units.forEach(u => { %>
+  <div class="mil-unit-panel">
+    <div class="mil-unit-header">
+      <span class="mil-unit-icon"><%= u.icon %></span>
+      <h3><%= u.name %></h3>
+    </div>
+    <div class="mil-unit-stats">
+      <div>Current: <strong><%= formatNumber(nation[u.key]) %></strong></div>
+      <% if (maxMilitary[u.key] > 0) { %>
+        <div>Max: <strong><%= formatNumber(maxMilitary[u.key]) %></strong></div>
+        <div class="mil-bar-wrap">
+          <div class="mil-bar" style="width: <%= Math.min(100, (nation[u.key] / maxMilitary[u.key]) * 100) %>%"></div>
+        </div>
+      <% } %>
+      <div class="mil-cost"><%= u.cost %></div>
+    </div>
+    <div class="mil-unit-actions">
+      <form method="POST" action="/military/buy" class="inline-form">
+        <input type="hidden" name="unit" value="<%= u.key %>">
+        <input type="number" name="quantity" min="1" value="100" style="width:80px">
+        <button type="submit" class="btn btn-primary btn-sm">Buy</button>
+      </form>
+      <form method="POST" action="/military/disband" class="inline-form">
+        <input type="hidden" name="unit" value="<%= u.key %>">
+        <input type="number" name="quantity" min="1" value="100" style="width:80px">
+        <button type="submit" class="btn btn-danger btn-sm">Disband</button>
+      </form>
+    </div>
+  </div>
+  <% }) %>
+</div>
+
+<!-- War Record -->
+<div class="panel">
+  <h2>📊 War Record</h2>
+  <div class="war-record-grid">
+    <div><strong>Offensive Wars Won:</strong> <%= nation.offensive_wars_won %></div>
+    <div><strong>Offensive Wars Lost:</strong> <%= nation.offensive_wars_lost %></div>
+    <div><strong>Defensive Wars Won:</strong> <%= nation.defensive_wars_won %></div>
+    <div><strong>Defensive Wars Lost:</strong> <%= nation.defensive_wars_lost %></div>
+  </div>
+  <div class="casualties">
+    <h4>All-Time Casualties Inflicted:</h4>
+    <span>👥 <%= formatNumber(nation.soldier_casualties) %> soldiers</span>
+    <span>🚗 <%= formatNumber(nation.tank_casualties) %> tanks</span>
+    <span>✈️ <%= formatNumber(nation.aircraft_casualties) %> aircraft</span>
+    <span>🚢 <%= formatNumber(nation.ship_casualties) %> ships</span>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

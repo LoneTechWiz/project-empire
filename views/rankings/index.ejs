@@ -1,0 +1,71 @@
+<%- include('../partials/header', { title: 'Rankings' }) %>
+
+<div class="page-header">
+  <h1>🏆 World Rankings</h1>
+</div>
+
+<!-- Category tabs -->
+<div class="tab-bar">
+  <% const cats = ['score','soldiers','tanks','aircraft','ships','cities','nukes']; %>
+  <% cats.forEach(c => { %>
+    <a href="/rankings?category=<%= c %>" class="tab <%= category === c ? 'active' : '' %>"><%= c.charAt(0).toUpperCase() + c.slice(1) %></a>
+  <% }) %>
+</div>
+
+<div class="content-grid">
+  <div class="content-main">
+    <div class="panel">
+      <h2>Nation Rankings — <%= category.charAt(0).toUpperCase() + category.slice(1) %></h2>
+      <table class="data-table rankings-table">
+        <thead>
+          <tr>
+            <th>Rank</th><th>Flag</th><th>Nation</th><th>Leader</th><th>Alliance</th><th>Cities</th>
+            <th><%= category.charAt(0).toUpperCase() + category.slice(1) %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% nations.forEach((n, i) => { %>
+          <tr class="<%= locals.nation && locals.nation.id === n.id ? 'highlight-row' : '' %>">
+            <td>#<%= i+1 %></td>
+            <td><img src="<%= n.flag_url %>" style="width:30px;height:21px;object-fit:cover;" onerror="this.src='/img/default_flag.png'"></td>
+            <td><a href="/nation/<%= n.id %>"><%= n.name %></a></td>
+            <td><%= n.leader_name %></td>
+            <td>
+              <% if (n.alliance_id) { %>
+                <a href="/alliances/<%= n.alliance_id %>">[<%= n.alliance_acronym %>]</a>
+              <% } else { %>—<% } %>
+            </td>
+            <td><%= n.city_count %></td>
+            <td>
+              <% if (category === 'score') { %><%= formatDecimal(n.score, 2) %>
+              <% } else if (category === 'cities') { %><%= n.city_count %>
+              <% } else { %><%= formatNumber(n[category]) %><% } %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="content-sidebar">
+    <div class="panel">
+      <h3>🤝 Alliance Rankings</h3>
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Alliance</th><th>Members</th><th>Total Score</th></tr></thead>
+        <tbody>
+          <% allianceRankings.forEach((a, i) => { %>
+          <tr>
+            <td>#<%= i+1 %></td>
+            <td><a href="/alliances/<%= a.id %>">[<%= a.acronym %>] <%= a.name %></a></td>
+            <td><%= a.member_count %></td>
+            <td><%= formatDecimal(a.total_score || 0, 2) %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

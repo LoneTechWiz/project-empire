@@ -1,0 +1,63 @@
+<%- include('../partials/header', { title: 'Create Nation' }) %>
+<div class="page-header">
+  <h1>Found Your Nation</h1>
+  <p>Establish your presence on the world stage.</p>
+</div>
+<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+<form method="POST" action="/nation/create" class="form-card">
+  <div class="form-row">
+    <div class="form-group">
+      <label>Nation Name *</label>
+      <input type="text" name="name" value="<%= values.name || '' %>" required minlength="3" maxlength="40" placeholder="e.g. Republic of Valoria">
+    </div>
+    <div class="form-group">
+      <label>Leader Name *</label>
+      <input type="text" name="leader_name" value="<%= values.leader_name || '' %>" required placeholder="Your leader's name">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Capital City</label>
+      <input type="text" name="capital" value="<%= values.capital || '' %>" placeholder="Capital city name">
+    </div>
+    <div class="form-group">
+      <label>Continent *</label>
+      <select name="continent">
+        <% CONTINENTS.forEach(c => { %>
+          <option value="<%= c %>" <%= values.continent === c ? 'selected' : '' %>><%= c %></option>
+        <% }) %>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Government Type</label>
+      <select name="government_type">
+        <% GOVERNMENTS.forEach(g => { %>
+          <option value="<%= g %>" <%= values.government_type === g ? 'selected' : '' %>><%= g %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Religion</label>
+      <select name="religion">
+        <% RELIGIONS.forEach(r => { %>
+          <option value="<%= r %>" <%= values.religion === r ? 'selected' : '' %>><%= r %></option>
+        <% }) %>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Nation Color</label>
+    <div class="color-picker">
+      <% COLORS.forEach(c => { %>
+        <label class="color-option">
+          <input type="radio" name="color" value="<%= c %>" <%= (!values.color && c === 'gray') || values.color === c ? 'checked' : '' %>>
+          <span class="color-swatch" style="background-color: <%= c %>;" title="<%= c %>"></span>
+        </label>
+      <% }) %>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary btn-large">🏛️ Found Nation</button>
+</form>
+<%- include('../partials/footer') %>
