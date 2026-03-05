@@ -138,6 +138,37 @@ function WarRow({ w, attacksUsed, nextRegenAt }) {
   )
 }
 
+function WarCard({ w, attacksUsed, nextRegenAt }) {
+  const MAX_ATTACKS = 3
+  const used = attacksUsed?.[w.id] ?? 0
+  const remaining = MAX_ATTACKS - used
+  const regenMs = nextRegenAt?.[w.id]
+  const countdown = useCountdown(remaining < MAX_ATTACKS ? regenMs : null)
+  return (
+    <div className="mobile-card-item">
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div>
+          <Link to={`/nations/${w.attacker?.id}`} style={{ fontWeight: 600 }}>{w.attacker?.name}</Link>
+          <span style={{ color: 'var(--text2)', margin: '0 6px' }}>vs</span>
+          <Link to={`/nations/${w.defender?.id}`} style={{ fontWeight: 600 }}>{w.defender?.name}</Link>
+        </div>
+        <Link to={`/wars/${w.id}`} className="btn btn-sm" style={remaining === 0 ? { opacity: 0.5 } : {}}>Attack</Link>
+      </div>
+      <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text2)', marginBottom: 6 }}>
+        <span>Resistance: <span style={{ color: 'var(--red)' }}>{w.attackerResistance}</span> / <span style={{ color: 'var(--green)' }}>{w.defenderResistance}</span></span>
+        <span>
+          {[...Array(MAX_ATTACKS)].map((_, i) => (
+            <span key={i} style={{ color: i < remaining ? 'var(--accent)' : 'var(--border)' }}>⚔</span>
+          ))} {remaining}/{MAX_ATTACKS}
+        </span>
+      </div>
+      {remaining < MAX_ATTACKS && countdown && (
+        <div style={{ fontSize: 11, color: 'var(--text2)' }}>+1 charge in {countdown}</div>
+      )}
+    </div>
+  )
+}
+
 function WarsTable({ title, wars, attacksUsed, nextRegenAt }) {
   if (!wars?.length) return (
     <div className="card" style={{ marginBottom: 16 }}>
@@ -146,16 +177,24 @@ function WarsTable({ title, wars, attacksUsed, nextRegenAt }) {
     </div>
   )
   return (
-    <div className="card" style={{ marginBottom: 16 }}>
-      <div style={{ fontWeight: 600, marginBottom: 12 }}>{title}</div>
-      <table>
-        <thead><tr>
-          <th>Attacker</th><th>Military</th><th>Defender</th><th>Military</th><th>Resistance</th><th>Attacks</th><th></th>
-        </tr></thead>
-        <tbody>
-          {wars.map(w => <WarRow key={w.id} w={w} attacksUsed={attacksUsed} nextRegenAt={nextRegenAt} />)}
-        </tbody>
-      </table>
+    <div style={{ marginBottom: 16 }}>
+      {/* Desktop table */}
+      <div className="card mobile-card-table">
+        <div style={{ fontWeight: 600, marginBottom: 12 }}>{title}</div>
+        <table>
+          <thead><tr>
+            <th>Attacker</th><th>Military</th><th>Defender</th><th>Military</th><th>Resistance</th><th>Attacks</th><th></th>
+          </tr></thead>
+          <tbody>
+            {wars.map(w => <WarRow key={w.id} w={w} attacksUsed={attacksUsed} nextRegenAt={nextRegenAt} />)}
+          </tbody>
+        </table>
+      </div>
+      {/* Mobile cards */}
+      <div className="mobile-card-list">
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
+        {wars.map(w => <WarCard key={w.id} w={w} attacksUsed={attacksUsed} nextRegenAt={nextRegenAt} />)}
+      </div>
     </div>
   )
 }

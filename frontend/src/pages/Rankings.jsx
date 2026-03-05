@@ -31,7 +31,7 @@ export default function Rankings() {
 
       {tab === 'nations' && (
         <>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
             {['score','soldiers','tanks','aircraft','ships'].map(c => (
               <button key={c} className={`btn btn-sm ${category === c ? '' : 'btn-ghost'}`}
                 onClick={() => setCategory(c)} style={{ textTransform: 'capitalize' }}>{c}</button>
@@ -40,7 +40,14 @@ export default function Rankings() {
           <div className="card">
             {nLoading ? <div className="loading">Loading…</div> : (
               <table>
-                <thead><tr><th>#</th><th>Nation</th><th>Score</th><th>Cities</th><th>Soldiers</th><th>Tanks</th><th>Aircraft</th><th>Alliance</th></tr></thead>
+                <thead><tr>
+                  <th>#</th><th>Nation</th><th>Score</th>
+                  <th className="hide-mobile">Cities</th>
+                  <th className="hide-mobile">Soldiers</th>
+                  <th className="hide-mobile">Tanks</th>
+                  <th className="hide-mobile">Aircraft</th>
+                  <th className="hide-mobile">Alliance</th>
+                </tr></thead>
                 <tbody>
                   {nations?.map(n => (
                     <tr key={n.id}>
@@ -50,11 +57,11 @@ export default function Rankings() {
                         <div style={{ fontSize: 12, color: 'var(--text2)' }}>{n.leaderName}</div>
                       </td>
                       <td>{fmt(n.score)}</td>
-                      <td>{n.cityCount}</td>
-                      <td>{fmt(n.soldiers)}</td>
-                      <td>{fmt(n.tanks)}</td>
-                      <td>{fmt(n.aircraft)}</td>
-                      <td>{n.allianceName ? <Link to={`/alliances/${n.allianceId}`}>{n.allianceName}</Link> : <span style={{ color: 'var(--text2)' }}>—</span>}</td>
+                      <td className="hide-mobile">{n.cityCount}</td>
+                      <td className="hide-mobile">{fmt(n.soldiers)}</td>
+                      <td className="hide-mobile">{fmt(n.tanks)}</td>
+                      <td className="hide-mobile">{fmt(n.aircraft)}</td>
+                      <td className="hide-mobile">{n.allianceName ? <Link to={`/alliances/${n.allianceId}`}>{n.allianceName}</Link> : <span style={{ color: 'var(--text2)' }}>—</span>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -68,7 +75,10 @@ export default function Rankings() {
         <div className="card">
           {aLoading ? <div className="loading">Loading…</div> : (
             <table>
-              <thead><tr><th>#</th><th>Alliance</th><th>Members</th><th>Total Score</th><th>Color</th></tr></thead>
+              <thead><tr>
+                <th>#</th><th>Alliance</th><th>Members</th><th>Total Score</th>
+                <th className="hide-mobile">Color</th>
+              </tr></thead>
               <tbody>
                 {alliances?.map(a => (
                   <tr key={a.id}>
@@ -79,7 +89,7 @@ export default function Rankings() {
                     </td>
                     <td>{a.memberCount}</td>
                     <td>{fmt(a.totalScore)}</td>
-                    <td><span style={{ background: a.color, padding: '2px 8px', borderRadius: 4, fontSize: 12, color: '#000' }}>{a.color}</span></td>
+                    <td className="hide-mobile"><span style={{ background: a.color, padding: '2px 8px', borderRadius: 4, fontSize: 12, color: '#000' }}>{a.color}</span></td>
                   </tr>
                 ))}
               </tbody>

@@ -83,19 +83,61 @@ tr:hover td { background: var(--surface2); }
 .progress-bar { background: var(--surface2); border-radius: 4px; overflow: hidden; height: 8px; }
 .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
 
-/* Navbar mobile layout */
-.nav-links-desktop { display: flex; gap: 4px; flex: 1; }
+/* ── Navbar ── */
+.nav-links-desktop { display: flex; gap: 4px; }
 .nav-right { display: flex; align-items: center; gap: 12px; }
 .hamburger-btn { display: none; background: transparent; border: 1px solid var(--border); color: var(--text2); font-size: 18px; padding: 4px 10px; cursor: pointer; border-radius: var(--radius); line-height: 1; }
 .mobile-nav { display: flex; flex-direction: column; background: var(--surface); padding: 8px 16px 14px; border-bottom: 1px solid var(--border); }
 
+/* Desktop: resources run inline between nav links and right controls */
+.nav-resources {
+  flex: 1; display: flex; gap: 14px; align-items: center;
+  overflow-x: auto; padding: 0 12px; min-width: 0;
+  scrollbar-width: none;
+}
+.nav-resources::-webkit-scrollbar { display: none; }
+
+/* Mobile: resource strip lives below the nav bar as a separate row */
+.mobile-resource-bar {
+  display: none;
+  gap: 14px; overflow-x: auto; flex-wrap: nowrap;
+  padding: 5px 16px; border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.mobile-resource-bar::-webkit-scrollbar { display: none; }
+
+/* ── Responsive helpers ── */
+.hide-mobile {}
+.hide-desktop { display: none; }
+
+/* ── Mobile overrides ── */
 @media (max-width: 768px) {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .nav-links-desktop { display: none; }
   .nav-right { display: none; }
+  .nav-resources { display: none; }
   .hamburger-btn { display: inline-flex; margin-left: auto; }
+  .mobile-resource-bar { display: flex; }
   .page { padding: 16px 12px; }
   .page-title { font-size: 18px; }
   .page-header { flex-wrap: wrap; gap: 12px; }
   table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .hide-mobile { display: none !important; }
+  .hide-desktop { display: block; }
 }
+
+/* ── Mobile card list (replaces tables on small screens) ── */
+.mobile-card-list { display: none; }
+@media (max-width: 768px) {
+  .mobile-card-list { display: flex; flex-direction: column; gap: 10px; }
+  .mobile-card-table { display: none; }
+}
+.mobile-card-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px;
+}
+.mobile-card-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 3px 0; font-size: 13px;
+}
+.mobile-card-label { color: var(--text2); font-size: 12px; }

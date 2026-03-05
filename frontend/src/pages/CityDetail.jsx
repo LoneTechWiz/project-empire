@@ -92,12 +92,12 @@ export default function CityDetail() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header" style={{ alignItems: 'flex-start' }}>
         <div>
           <Link to="/cities" style={{ color: 'var(--text2)', fontSize: 13 }}>← Cities</Link>
           <h1 className="page-title" style={{ marginTop: 4 }}>{city.name}</h1>
         </div>
-        <div className="grid-2" style={{ gap: 12 }}>
+        <div className="grid-2" style={{ gap: 12, minWidth: 0, flex: 1, maxWidth: 420 }}>
           <div className="card" style={{ padding: '12px 16px' }}>
             <div style={{ fontSize: 11, color: 'var(--text2)' }}>Infrastructure</div>
             <div style={{ fontWeight: 700 }}>{fmt(city.infrastructure)}</div>

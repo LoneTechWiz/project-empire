@@ -45,7 +45,8 @@ export default function Military() {
       {error && <div className="alert alert-error" onClick={() => setError('')}>{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
-      <div className="card">
+      {/* Desktop table */}
+      <div className="card mobile-card-table">
         <table>
           <thead>
             <tr>
@@ -77,6 +78,33 @@ export default function Military() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="mobile-card-list">
+        {UNITS.map(({ key, label, cost }) => (
+          <div key={key} className="mobile-card-item">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontWeight: 600 }}>{label}</span>
+              <span style={{ fontSize: 12, color: 'var(--text2)' }}>
+                {fmt(n?.[key] ?? 0)} / {max[key] != null ? fmt(max[key]) : '∞'}
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 8 }}>{cost}</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <input
+                type="number" min={1} value={qty[key] || ''}
+                onChange={e => setQty(q => ({ ...q, [key]: e.target.value }))}
+                style={{ flex: 1, padding: '6px 10px' }}
+                placeholder="Quantity"
+              />
+              <button className="btn btn-sm btn-success" disabled={buy.isPending || !qty[key]}
+                onClick={() => { setError(''); buy.mutate({ unit: key, quantity: parseInt(qty[key]) }) }}>Buy</button>
+              <button className="btn btn-sm btn-danger" disabled={disband.isPending || !qty[key]}
+                onClick={() => { setError(''); disband.mutate({ unit: key, quantity: parseInt(qty[key]) }) }}>Disband</button>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="grid-2" style={{ marginTop: 16 }}>
