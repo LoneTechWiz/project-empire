@@ -38,26 +38,24 @@ public class CityController {
         Map.entry("impSubway", 250000), Map.entry("impSupermarket", 5000),
         Map.entry("impBank", 15000), Map.entry("impMall", 50000), Map.entry("impStadium", 100000)
     );
-    private static final Map<String, Integer> IMP_MAX = Map.ofEntries(
-        Map.entry("impCoalpower", 5), Map.entry("impOilpower", 5), Map.entry("impNuclearpower", 5),
-        Map.entry("impWindpower", 50), Map.entry("impCoalmine", 10), Map.entry("impOilwell", 10),
-        Map.entry("impIronmine", 10), Map.entry("impBauxitemine", 10), Map.entry("impLeadmine", 10),
-        Map.entry("impUraniummine", 5), Map.entry("impFarm", 20), Map.entry("impOilrefinery", 5),
-        Map.entry("impSteelmill", 5), Map.entry("impAluminumrefinery", 5),
-        Map.entry("impMunitionsfactory", 5), Map.entry("impPolicestation", 5),
-        Map.entry("impHospital", 5), Map.entry("impRecyclingcenter", 5),
-        Map.entry("impSubway", 3), Map.entry("impSupermarket", 5), Map.entry("impBank", 5),
-        Map.entry("impMall", 5), Map.entry("impStadium", 3)
-    );
-
     private Nation requireNation(UserDetails ud) {
         User user = userRepo.findByUsername(ud.getUsername()).orElseThrow();
         return nationRepo.findByUser(user).orElseThrow(() -> new IllegalStateException("No nation."));
     }
 
+    private int[] countImps(City city) throws Exception {
+        int total = 0;
+        for (String imp : IMP_COSTS.keySet()) {
+            Field f = City.class.getDeclaredField(imp);
+            f.setAccessible(true);
+            total += (int) f.get(city);
+        }
+        return new int[]{total};
+    }
+
     private double infraCost(double current, double target) {
         double cost = 0;
-        for (double i = current; i < target; i++) cost += 300 + (i * 150);
+        for (double i = current; i < target; i++) cost += 10 + (i * 2);
         return cost;
     }
 
@@ -82,8 +80,7 @@ public class CityController {
         return ResponseEntity.ok(ApiResponse.ok(Map.of(
             "cities", result,
             "buyCost", cityBuyCost(count),
-            "impCosts", IMP_COSTS,
-            "impMax", IMP_MAX
+            "impCosts", IMP_COSTS
         )));
     }
 
@@ -93,13 +90,19 @@ public class CityController {
         City city = cityRepo.findByIdAndNation(id, nation).orElse(null);
         if (city == null) return ResponseEntity.notFound().build();
         double[] pw = economy.getCityPower(city);
-        return ResponseEntity.ok(ApiResponse.ok(Map.of(
-            "city", city,
-            "powerAvailable", pw[0], "powerNeeded", pw[1], "powered", pw[0] >= pw[1],
-            "commerce", economy.getCityCommerce(city),
-            "production", economy.calcCityProduction(city, nation),
-            "impCosts", IMP_COSTS, "impMax", IMP_MAX
-        )));
+        int[] imps;
+        try { imps = countImps(city); } catch (Exception e) { imps = new int[]{0}; }
+        int impSlots = (int)(city.getInfrastructure() / 25);
+        int commercePct = economy.getCityCommerce(city);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("city", city);
+        resp.put("powerAvailable", pw[0]); resp.put("powerNeeded", pw[1]); resp.put("powered", pw[0] >= pw[1]);
+        resp.put("commerce", commercePct);
+        resp.put("production", economy.calcCityProduction(city, nation));
+        resp.put("impCosts", IMP_COSTS);
+        resp.put("impSlots", impSlots); resp.put("impsUsed", imps[0]);
+        resp.put("commerceUsed", commercePct);
+        return ResponseEntity.ok(ApiResponse.ok(resp));
     }
 
     @PostMapping
@@ -117,7 +120,7 @@ public class CityController {
         nation.setMoney(nation.getMoney() - cost);
         nationRepo.save(nation);
         City city = cityRepo.save(City.builder().nation(nation).name(cityName)
-            .infrastructure(20).land(500).build());
+            .infrastructure(20).land(500).population(20000).build());
         activityLogRepo.save(ActivityLog.builder().nation(nation)
             .message("New city founded: " + cityName + ".").build());
         return ResponseEntity.ok(ApiResponse.ok(city));
@@ -136,13 +139,15 @@ public class CityController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Invalid improvement."));
 
         try {
+            int[] imps = countImps(city);
+            int impSlots = (int)(city.getInfrastructure() / 25);
+            if (imps[0] >= impSlots)
+                return ResponseEntity.badRequest().body(ApiResponse.error("Not enough infrastructure for more improvements."));
             Field f = City.class.getDeclaredField(imp);
             f.setAccessible(true);
             int current = (int) f.get(city);
-            int max = IMP_MAX.getOrDefault(imp, 5);
-            if (current >= max) return ResponseEntity.badRequest().body(ApiResponse.error("Max reached."));
 
-            double cost = IMP_COSTS.get(imp);
+            double cost = IMP_COSTS.get(imp) * (1 + current * 0.5);
             if (nation.getMoney() < cost) return ResponseEntity.badRequest().body(ApiResponse.error("Not enough money."));
 
             f.set(city, current + 1);
@@ -211,14 +216,15 @@ public class CityController {
         City city = cityRepo.findByIdAndNation(id, nation).orElse(null);
         if (city == null) return ResponseEntity.notFound().build();
 
-        double amount = body.getOrDefault("amount", 0.0);
-        if (amount <= 0 || amount > 5000)
-            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid amount."));
+        double target = body.getOrDefault("target", 0.0);
+        if (target <= city.getLand() || target > 10000)
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid target."));
 
-        double cost = amount * 400;
+        double cost = 0;
+        for (double i = city.getLand(); i < target; i++) cost += 30 + (i * 0.2);
         if (nation.getMoney() < cost) return ResponseEntity.badRequest().body(ApiResponse.error("Not enough money."));
 
-        city.setLand(city.getLand() + amount);
+        city.setLand(target);
         nation.setMoney(nation.getMoney() - cost);
         cityRepo.save(city);
         nationRepo.save(nation);

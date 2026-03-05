@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../api/client'
@@ -49,8 +49,8 @@ export default function Wars() {
         </div>
       )}
 
-      <WarsTable title="Offensive Wars" wars={data?.offensive} type="offensive" />
-      <WarsTable title="Defensive Wars" wars={data?.defensive} type="defensive" />
+      <WarsTable title="Offensive Wars" wars={data?.offensive} attacksUsed={data?.attacksUsed} nextRegenAt={data?.nextRegenAt} />
+      <WarsTable title="Defensive Wars" wars={data?.defensive} attacksUsed={data?.attacksUsed} nextRegenAt={data?.nextRegenAt} />
 
       {data?.past?.length > 0 && (
         <div className="card" style={{ marginTop: 16 }}>
@@ -74,7 +74,71 @@ export default function Wars() {
   )
 }
 
-function WarsTable({ title, wars, type }) {
+function MilSummary({ n }) {
+  if (!n) return null
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <span>👥 {fmt(n.soldiers)}</span>
+      <span>🛡 {fmt(n.tanks)}</span>
+      <span>✈️ {fmt(n.aircraft)}</span>
+      <span>🚢 {fmt(n.ships)}</span>
+    </div>
+  )
+}
+
+function useCountdown(targetMs) {
+  const [display, setDisplay] = useState('')
+  useEffect(() => {
+    if (!targetMs) return
+    const update = () => {
+      const ms = targetMs - Date.now()
+      if (ms <= 0) { setDisplay('now'); return }
+      const h = Math.floor(ms / 3600000)
+      const m = Math.floor((ms % 3600000) / 60000)
+      const s = Math.floor((ms % 60000) / 1000)
+      setDisplay(`${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`)
+    }
+    update()
+    const id = setInterval(update, 1000)
+    return () => clearInterval(id)
+  }, [targetMs])
+  return display
+}
+
+function WarRow({ w, attacksUsed, nextRegenAt }) {
+  const MAX_ATTACKS = 3
+  const used = attacksUsed?.[w.id] ?? 0
+  const remaining = MAX_ATTACKS - used
+  const regenMs = nextRegenAt?.[w.id]
+  const countdown = useCountdown(remaining < MAX_ATTACKS ? regenMs : null)
+  return (
+    <tr>
+      <td><Link to={`/nations/${w.attacker?.id}`}>{w.attacker?.name}</Link></td>
+      <td style={{ fontSize: 11, color: 'var(--text2)' }}><MilSummary n={w.attacker} /></td>
+      <td><Link to={`/nations/${w.defender?.id}`}>{w.defender?.name}</Link></td>
+      <td style={{ fontSize: 11, color: 'var(--text2)' }}><MilSummary n={w.defender} /></td>
+      <td style={{ fontSize: 12 }}>
+        <span style={{ color: 'var(--red)' }}>{w.attackerResistance}</span>
+        {' / '}
+        <span style={{ color: 'var(--green)' }}>{w.defenderResistance}</span>
+      </td>
+      <td style={{ fontSize: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {[...Array(MAX_ATTACKS)].map((_, i) => (
+            <span key={i} style={{ color: i < remaining ? 'var(--accent)' : 'var(--border)' }}>⚔</span>
+          ))}
+          <span style={{ color: 'var(--text2)' }}>{remaining}/{MAX_ATTACKS}</span>
+        </div>
+        {remaining < MAX_ATTACKS && countdown && (
+          <div style={{ color: 'var(--text2)', fontSize: 11, marginTop: 2 }}>+1 in {countdown}</div>
+        )}
+      </td>
+      <td><Link to={`/wars/${w.id}`} className="btn btn-sm" style={remaining === 0 ? { opacity: 0.5 } : {}}>Attack</Link></td>
+    </tr>
+  )
+}
+
+function WarsTable({ title, wars, attacksUsed, nextRegenAt }) {
   if (!wars?.length) return (
     <div className="card" style={{ marginBottom: 16 }}>
       <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
@@ -86,22 +150,10 @@ function WarsTable({ title, wars, type }) {
       <div style={{ fontWeight: 600, marginBottom: 12 }}>{title}</div>
       <table>
         <thead><tr>
-          <th>Attacker</th><th>Defender</th><th>Resistance</th><th>Status</th><th></th>
+          <th>Attacker</th><th>Military</th><th>Defender</th><th>Military</th><th>Resistance</th><th>Attacks</th><th></th>
         </tr></thead>
         <tbody>
-          {wars.map(w => (
-            <tr key={w.id}>
-              <td><Link to={`/nations/${w.attacker?.id}`}>{w.attacker?.name}</Link></td>
-              <td><Link to={`/nations/${w.defender?.id}`}>{w.defender?.name}</Link></td>
-              <td style={{ fontSize: 12 }}>
-                <span style={{ color: 'var(--red)' }}>{w.attackerResistance}</span>
-                {' / '}
-                <span style={{ color: 'var(--green)' }}>{w.defenderResistance}</span>
-              </td>
-              <td><span className="badge badge-yellow">{w.status}</span></td>
-              <td><Link to={`/wars/${w.id}`} className="btn btn-sm">Attack</Link></td>
-            </tr>
-          ))}
+          {wars.map(w => <WarRow key={w.id} w={w} attacksUsed={attacksUsed} nextRegenAt={nextRegenAt} />)}
         </tbody>
       </table>
     </div>

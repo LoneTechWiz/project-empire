@@ -46,6 +46,8 @@ public class War {
     @Builder.Default private String airControl = "none";
     @Builder.Default private String navalControl = "none";
 
+    private Long peaceOfferedBy; // nation ID that offered peace, null if no offer pending
+
     @Builder.Default private double attackerInfraDestroyed = 0;
     @Builder.Default private double defenderInfraDestroyed = 0;
     @Builder.Default private double attackerMoneyLooted = 0;

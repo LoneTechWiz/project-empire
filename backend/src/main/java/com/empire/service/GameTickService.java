@@ -12,6 +12,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.beans.factory.annotation.Value;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +29,18 @@ public class GameTickService {
     private final WarRepository warRepo;
     private final EconomyEngine economy;
 
+    @Value("${game.tick.interval-ms}")
+    private long tickIntervalMs;
+
+    private volatile long lastTickEpochMs = System.currentTimeMillis();
+
+    public long getLastTickEpochMs() { return lastTickEpochMs; }
+    public long getTickIntervalMs() { return tickIntervalMs; }
+
     @Scheduled(fixedRateString = "${game.tick.interval-ms}")
     @Transactional
     public void runTick() {
+        lastTickEpochMs = System.currentTimeMillis();
         log.info("[TICK] Applying game tick...");
         List<Nation> nations = nationRepo.findAll();
 
@@ -41,7 +53,9 @@ public class GameTickService {
             for (City city : cities) {
                 Map<String, Double> delta = economy.calcCityProduction(city, nation);
                 delta.forEach((k, v) -> totals.merge(k, v, Double::sum));
+                city.setPopulation(city.getPopulation() + economy.calcPopulationGrowth(city));
             }
+            cityRepo.saveAll(cities);
 
             Map<String, Double> upkeep = economy.calcMilitaryUpkeep(nation);
             upkeep.forEach((k, v) -> totals.merge(k, v, Double::sum));

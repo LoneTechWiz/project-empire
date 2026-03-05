@@ -32,7 +32,7 @@ export default function Trade() {
   })
   const accept = useMutation({
     mutationFn: id => api.post(`/trade/${id}/accept`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['trade'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['trade'] }); qc.invalidateQueries({ queryKey: ['nation-mine'] }) },
     onError: err => setError(err.response?.data?.message || 'Failed.')
   })
   const cancel = useMutation({

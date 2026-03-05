@@ -83,6 +83,19 @@ tr:hover td { background: var(--surface2); }
 .progress-bar { background: var(--surface2); border-radius: 4px; overflow: hidden; height: 8px; }
 .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
 
+/* Navbar mobile layout */
+.nav-links-desktop { display: flex; gap: 4px; flex: 1; }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.hamburger-btn { display: none; background: transparent; border: 1px solid var(--border); color: var(--text2); font-size: 18px; padding: 4px 10px; cursor: pointer; border-radius: var(--radius); line-height: 1; }
+.mobile-nav { display: flex; flex-direction: column; background: var(--surface); padding: 8px 16px 14px; border-bottom: 1px solid var(--border); }
+
 @media (max-width: 768px) {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .nav-links-desktop { display: none; }
+  .nav-right { display: none; }
+  .hamburger-btn { display: inline-flex; margin-left: auto; }
+  .page { padding: 16px 12px; }
+  .page-title { font-size: 18px; }
+  .page-header { flex-wrap: wrap; gap: 12px; }
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }

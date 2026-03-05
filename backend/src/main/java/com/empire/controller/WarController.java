@@ -26,6 +26,7 @@ public class WarController {
     private final CityRepository cityRepo;
     private final ActivityLogRepository activityLogRepo;
     private final WarEngine warEngine;
+    private final MessageRepository messageRepo;
 
     private Nation requireNation(UserDetails ud) {
         User user = userRepo.findByUsername(ud.getUsername()).orElseThrow();
@@ -35,10 +36,29 @@ public class WarController {
     @GetMapping
     public ResponseEntity<?> list(@AuthenticationPrincipal UserDetails ud) {
         Nation nation = requireNation(ud);
+        List<War> offensive = warRepo.findByAttackerAndStatus(nation, "active");
+        List<War> defensive = warRepo.findByDefenderAndStatus(nation, "active");
+        LocalDateTime window = LocalDateTime.now().minusHours(8);
+        Map<Long, Long> attacksUsed = new HashMap<>();
+        Map<Long, Long> nextRegenAt = new HashMap<>();
+        for (War w : offensive) {
+            List<WarAttack> recent = attackRepo.findByWarAndAttackerAndDateAfterOrderByDateAsc(w, nation, window);
+            attacksUsed.put(w.getId(), (long) recent.size());
+            if (!recent.isEmpty()) nextRegenAt.put(w.getId(),
+                recent.get(0).getDate().plusHours(8).toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
+        }
+        for (War w : defensive) {
+            List<WarAttack> recent = attackRepo.findByWarAndAttackerAndDateAfterOrderByDateAsc(w, nation, window);
+            attacksUsed.put(w.getId(), (long) recent.size());
+            if (!recent.isEmpty()) nextRegenAt.put(w.getId(),
+                recent.get(0).getDate().plusHours(8).toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
+        }
         return ResponseEntity.ok(ApiResponse.ok(Map.of(
-            "offensive", warRepo.findByAttackerAndStatus(nation, "active"),
-            "defensive", warRepo.findByDefenderAndStatus(nation, "active"),
-            "past",      warRepo.findPastWars(nation)
+            "offensive", offensive,
+            "defensive", defensive,
+            "past",      warRepo.findPastWars(nation),
+            "attacksUsed", attacksUsed,
+            "nextRegenAt", nextRegenAt
         )));
     }
 
@@ -50,12 +70,16 @@ public class WarController {
         List<WarAttack> attacks = attackRepo.findByWarOrderByDateDesc(war);
         boolean isAttacker = war.getAttacker().getId().equals(nation.getId());
         boolean isDefender = war.getDefender().getId().equals(nation.getId());
-        long attacksToday = attackRepo.countByWarAndAttackerAndDateAfter(
-            war, nation, LocalDate.now().atStartOfDay());
+        List<WarAttack> recentAttacks = attackRepo.findByWarAndAttackerAndDateAfterOrderByDateAsc(
+            war, nation, LocalDateTime.now().minusHours(8));
+        long attacksUsed = recentAttacks.size();
+        Long nextRegenAt = recentAttacks.isEmpty() ? null :
+            recentAttacks.get(0).getDate().plusHours(8).toInstant(java.time.ZoneOffset.UTC).toEpochMilli();
         return ResponseEntity.ok(ApiResponse.ok(Map.of(
             "war", war, "attacks", attacks,
             "isAttacker", isAttacker, "isDefender", isDefender,
-            "attacksToday", attacksToday
+            "attacksUsed", attacksUsed,
+            "nextRegenAt", nextRegenAt != null ? nextRegenAt : 0L
         )));
     }
 
@@ -85,6 +109,13 @@ public class WarController {
         activityLogRepo.save(ActivityLog.builder().nation(defender)
             .message(attacker.getName() + " declared war on " + defender.getName() + ".").build());
 
+        messageRepo.save(Message.builder()
+            .sender(attacker)
+            .receiver(defender)
+            .subject("⚔️ War Declaration")
+            .content(attacker.getName() + " has declared war on " + defender.getName() + "!\n\nReason: " + reason + "\n\nPrepare your defenses.")
+            .build());
+
         return ResponseEntity.ok(ApiResponse.ok(war));
     }
 
@@ -100,9 +131,9 @@ public class WarController {
         boolean isDefender = war.getDefender().getId().equals(attacker.getId());
         if (!isAttacker && !isDefender) return fail("Not a participant.");
 
-        long attacksToday = attackRepo.countByWarAndAttackerAndDateAfter(
-            war, attacker, LocalDate.now().atStartOfDay());
-        if (attacksToday >= 3) return fail("No action points remaining today.");
+        long attacksUsed = attackRepo.countByWarAndAttackerAndDateAfter(
+            war, attacker, LocalDateTime.now().minusHours(8));
+        if (attacksUsed >= 3) return fail("No attacks remaining. Charges regenerate every 8 hours.");
 
         String attackType = body.get("attackType");
         Nation defender = isAttacker ? war.getDefender() : war.getAttacker();
@@ -187,13 +218,64 @@ public class WarController {
         War war = warRepo.findById(id).orElse(null);
         if (war == null || !"active".equals(war.getStatus())) return fail("War not active.");
         Nation nation = requireNation(ud);
-        if (!war.getAttacker().getId().equals(nation.getId()) && !war.getDefender().getId().equals(nation.getId()))
-            return fail("Not a participant.");
+        boolean isAttacker = war.getAttacker().getId().equals(nation.getId());
+        boolean isDefender = war.getDefender().getId().equals(nation.getId());
+        if (!isAttacker && !isDefender) return fail("Not a participant.");
 
-        war.setStatus("peace");
-        war.setEndDate(LocalDateTime.now());
+        Long offeredBy = war.getPeaceOfferedBy();
+        Nation opponent = isAttacker ? war.getDefender() : war.getAttacker();
+
+        if (offeredBy == null) {
+            // No offer yet — make one
+            war.setPeaceOfferedBy(nation.getId());
+            warRepo.save(war);
+            messageRepo.save(Message.builder()
+                .sender(nation).receiver(opponent)
+                .subject("🕊 Peace Offer")
+                .content(nation.getName() + " has offered peace in War #" + war.getId() + ". Go to the war page to accept or decline.")
+                .build());
+            return ResponseEntity.ok(ApiResponse.ok("Peace offer sent."));
+        } else if (offeredBy.equals(nation.getId())) {
+            // Withdraw your own offer
+            war.setPeaceOfferedBy(null);
+            warRepo.save(war);
+            return ResponseEntity.ok(ApiResponse.ok("Peace offer withdrawn."));
+        } else {
+            // Opponent offered — accept it
+            war.setStatus("peace");
+            war.setEndDate(LocalDateTime.now());
+            war.setPeaceOfferedBy(null);
+            warRepo.save(war);
+            messageRepo.save(Message.builder()
+                .sender(nation).receiver(opponent)
+                .subject("🕊 Peace Accepted")
+                .content(nation.getName() + " has accepted your peace offer. War #" + war.getId() + " is over.")
+                .build());
+            return ResponseEntity.ok(ApiResponse.ok("Peace accepted."));
+        }
+    }
+
+    @PostMapping("/{id}/peace/decline")
+    public ResponseEntity<?> declinePeace(@PathVariable Long id,
+                                          @AuthenticationPrincipal UserDetails ud) {
+        War war = warRepo.findById(id).orElse(null);
+        if (war == null || !"active".equals(war.getStatus())) return fail("War not active.");
+        Nation nation = requireNation(ud);
+        boolean isAttacker = war.getAttacker().getId().equals(nation.getId());
+        boolean isDefender = war.getDefender().getId().equals(nation.getId());
+        if (!isAttacker && !isDefender) return fail("Not a participant.");
+        if (war.getPeaceOfferedBy() == null || war.getPeaceOfferedBy().equals(nation.getId()))
+            return fail("No incoming peace offer to decline.");
+
+        Nation opponent = isAttacker ? war.getDefender() : war.getAttacker();
+        war.setPeaceOfferedBy(null);
         warRepo.save(war);
-        return ResponseEntity.ok(ApiResponse.ok("Peace declared."));
+        messageRepo.save(Message.builder()
+            .sender(nation).receiver(opponent)
+            .subject("🕊 Peace Declined")
+            .content(nation.getName() + " has declined your peace offer in War #" + war.getId() + ".")
+            .build());
+        return ResponseEntity.ok(ApiResponse.ok("Peace offer declined."));
     }
 
     private ResponseEntity<?> fail(String msg) {

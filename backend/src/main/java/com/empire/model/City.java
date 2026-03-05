@@ -30,6 +30,7 @@ public class City {
 
     @Builder.Default private double infrastructure = 10;
     @Builder.Default private double land = 250;
+    @Builder.Default private long population = 2000;
 
     // Power
     @Builder.Default private int impCoalpower = 0;

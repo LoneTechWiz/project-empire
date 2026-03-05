@@ -10,4 +10,5 @@ import java.util.List;
 public interface WarAttackRepository extends JpaRepository<WarAttack, Long> {
     List<WarAttack> findByWarOrderByDateDesc(War war);
     long countByWarAndAttackerAndDateAfter(War war, Nation attacker, LocalDateTime after);
+    List<WarAttack> findByWarAndAttackerAndDateAfterOrderByDateAsc(War war, Nation attacker, LocalDateTime after);
 }

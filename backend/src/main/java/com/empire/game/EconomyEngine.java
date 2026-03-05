@@ -32,14 +32,15 @@ public class EconomyEngine {
             c.getImpWindpower() * 250.0;
 
         double needed =
+            c.getInfrastructure() * 0.15 +
             (c.getImpCoalmine() + c.getImpOilwell() + c.getImpIronmine() +
-             c.getImpBauxitemine() + c.getImpLeadmine() + c.getImpUraniummine()) * 1.2 +
-            c.getImpFarm() * 1.0 +
-            (c.getImpOilrefinery() + c.getImpSteelmill() + c.getImpAluminumrefinery()) * 3.0 +
-            c.getImpMunitionsfactory() * 3.5 +
+             c.getImpBauxitemine() + c.getImpLeadmine() + c.getImpUraniummine()) * 3.0 +
+            c.getImpFarm() * 2.0 +
+            (c.getImpOilrefinery() + c.getImpSteelmill() + c.getImpAluminumrefinery()) * 6.0 +
+            c.getImpMunitionsfactory() * 8.0 +
             (c.getImpPolicestation() + c.getImpHospital() + c.getImpRecyclingcenter() +
              c.getImpSubway() + c.getImpSupermarket() + c.getImpBank() +
-             c.getImpMall() + c.getImpStadium()) * 0.5;
+             c.getImpMall() + c.getImpStadium()) * 1.5;
 
         return new double[]{available, needed};
     }
@@ -49,10 +50,9 @@ public class EconomyEngine {
         return pw[0] >= pw[1];
     }
 
-    /** Commerce rate 0-100 for a city. */
+    /** Commerce rate for a city (uncapped). */
     public int getCityCommerce(City c) {
-        int commerce =
-            c.getImpPolicestation() * 1 +
+        return c.getImpPolicestation() * 1 +
             c.getImpHospital() * 1 +
             c.getImpRecyclingcenter() * 2 +
             c.getImpSubway() * 8 +
@@ -60,7 +60,21 @@ public class EconomyEngine {
             c.getImpBank() * 5 +
             c.getImpMall() * 9 +
             c.getImpStadium() * 12;
-        return Math.min(commerce, 100);
+    }
+
+    /**
+     * Population growth per tick.
+     * Max population is determined by infrastructure.
+     * Growth rate is driven by population-per-acre: lower density = faster growth.
+     */
+    public long calcPopulationGrowth(City c) {
+        long maxPop = (long)(c.getInfrastructure() * 1000);
+        long currentPop = c.getPopulation();
+        if (currentPop >= maxPop) return 0;
+        double popPerAcre = currentPop / Math.max(c.getLand(), 1.0);
+        double densityFactor = 1.0 / Math.max(popPerAcre, 1.0);
+        double growthRate = 0.05 * Math.min(densityFactor, 1.0);
+        return Math.round((maxPop - currentPop) * growthRate);
     }
 
     /** Per-turn resource delta for one city. All values per-turn (every 2h = 1 turn, 12 turns/day). */
@@ -79,7 +93,7 @@ public class EconomyEngine {
         d.merge("bauxite",  c.getImpBauxitemine()   * 3.0  * powerMult, Double::sum);
         d.merge("lead",     c.getImpLeadmine()      * 3.0  * powerMult, Double::sum);
         d.merge("uranium",  c.getImpUraniummine()   * 3.0  * powerMult, Double::sum);
-        d.merge("food",     c.getImpFarm()          * 12.0 * powerMult, Double::sum);
+        d.merge("food",     c.getLand() * (0.05 + 0.03 * c.getImpFarm()) * powerMult, Double::sum);
 
         // Industry
         d.merge("gasoline",  c.getImpOilrefinery()       *  6.0 * powerMult, Double::sum);
@@ -92,13 +106,12 @@ public class EconomyEngine {
         d.merge("munitions", c.getImpMunitionsfactory()  * 18.0 * powerMult, Double::sum);
         d.merge("lead",     -c.getImpMunitionsfactory()  *  6.0 * powerMult, Double::sum);
 
-        // Commerce → money
-        double infra = c.getInfrastructure();
-        double moneyPerTurn = (infra * (commerce / 100.0) * 527.0) / 12.0;
+        // Commerce → money (based on population and commerce rate)
+        long population = c.getPopulation();
+        double moneyPerTurn = (population * (commerce / 100.0) * 0.5) / 12.0;
         d.put("money", moneyPerTurn);
 
         // Food consumption by population
-        long population = (long) (infra * 100 + c.getLand() * 0.5);
         double foodConsumed = (population / 1000.0) / 12.0;
         d.merge("food", -foodConsumed, Double::sum);
 

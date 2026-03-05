@@ -18,10 +18,11 @@ sudo -u postgres psql -c "CREATE DATABASE empire OWNER empire;"
 
 # Run backend (port 8080)
 cd backend && mvn spring-boot:run
-```
 
-Or build and run the JAR:
-```bash
+# Run tests
+cd backend && mvn test
+
+# Build JAR
 cd backend && mvn clean package -DskipTests && java -jar target/empire-backend-0.0.1-SNAPSHOT.jar
 ```
 
@@ -40,6 +41,7 @@ Node.js is not in system PATH by default. Use fnm:
 ```bash
 export PATH="$HOME/.local/share/fnm:$PATH" && eval "$(fnm env)"
 cd frontend && npm install && npm run dev   # port 5173
+cd frontend && npm run build               # production build to dist/
 ```
 
 Vite proxies `/api` to `http://localhost:8080` in dev mode.
@@ -57,16 +59,24 @@ Vite proxies `/api` to `http://localhost:8080` in dev mode.
 4. `GameTickService` — `@Scheduled` runs every `TICK_MS`, calls `EconomyEngine.applyTick()` and expires old wars
 
 **Game engine (`com.empire.game`):**
-- `EconomyEngine` — `applyTick()` iterates all nations, sums city production (`calcCityProduction`) + military upkeep, applies deltas, updates score. `RESOURCES` list and `BASE_PRICES` map are static constants used by `TradeController`.
+- `EconomyEngine` — `applyTick()` iterates all nations, sums city production (`calcCityProduction`) + military upkeep, applies deltas, updates score. `RESOURCES` list and `BASE_PRICES` map are static constants used by `TradeController`. Cities receive a 0.5x production penalty when unpowered.
 - `WarEngine` — `resolveAttack(type, attacker, defender, war)` returns a `WarAttack.WarAttackBuilder` with all result fields populated. The controller applies the result to the DB.
+
+**War mechanics:**
+- Each `War` has `attackerResistance` and `defenderResistance` (both start at 100). Successful attacks reduce the defender's resistance; hitting 0 means defeat.
+- `groundControl`, `airControl`, `navalControl` on `War` track battlefield dominance (`"attacker"`, `"defender"`, or `"none"`). Control grants strength multipliers in subsequent attacks.
+- War status: `active`, `peace` (agreed), `expired` (time limit).
 
 **Database:** Hibernate `ddl-auto=update` auto-generates schema from JPA entities. All entities are in `com.empire.model`. Never manually set `score` — it is recalculated by `EconomyEngine.calcScore()` on every tick.
 
 **Key conventions:**
+- All entities use Lombok `@Data @Builder @NoArgsConstructor @AllArgsConstructor`. Use `@Builder.Default` for any field with a non-null default.
 - All DB access is through Spring Data JPA repositories in `com.empire.repository`
 - `ApiResponse.ok(data)` / `ApiResponse.error(msg)` are the standard response wrappers
 - Controllers use `requireNation(UserDetails)` helper to get the authenticated nation
-- `CityController` uses reflection (`City.class.getDeclaredField(imp)`) to generically get/set improvement counts
+- `CityController` uses reflection (`City.class.getDeclaredField(imp)`) to generically get/set improvement counts — city improvement fields on `City` must follow the naming convention `imp` + PascalCase (e.g., `impCoalmine`, `impSteelmill`). The string passed from the frontend must exactly match the field name.
+- The `projects` field on `Nation` is a JSON array stored as a `TEXT` column — deserialize/serialize manually.
+- `Nation.turns` is an action-point system for war attacks. `Nation.beigeTurns` tracks remaining turns of post-war beige (protection) status.
 
 ### Frontend
 

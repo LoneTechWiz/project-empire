@@ -36,13 +36,21 @@ export default function WarDetail() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['war', id] }); qc.invalidateQueries({ queryKey: ['wars'] }) },
     onError: err => setError(err.response?.data?.message || 'Failed.')
   })
+  const declinePeace = useMutation({
+    mutationFn: () => api.post(`/wars/${id}/peace/decline`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['war', id] }),
+    onError: err => setError(err.response?.data?.message || 'Failed.')
+  })
 
   if (isLoading) return <div className="loading">Loading…</div>
   if (!data) return <div className="page">War not found.</div>
 
-  const { war, attacks, isAttacker, isDefender, attacksToday } = data
+  const { war, attacks, isAttacker, isDefender, attacksUsed } = data
   const isParticipant = isAttacker || isDefender
-  const canAttack = isParticipant && war.status === 'active' && attacksToday < 3
+  const canAttack = isParticipant && war.status === 'active' && attacksUsed < 3
+  const myNationId = isAttacker ? war.attacker?.id : war.defender?.id
+  const iOfferedPeace = war.peaceOfferedBy && war.peaceOfferedBy === myNationId
+  const opponentOfferedPeace = war.peaceOfferedBy && war.peaceOfferedBy !== myNationId
 
   return (
     <div className="page">
@@ -90,7 +98,7 @@ export default function WarDetail() {
 
       {canAttack && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, marginBottom: 12 }}>Launch Attack ({3 - attacksToday} actions remaining today)</div>
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>Launch Attack ({3 - attacksUsed} charges remaining)</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
             {ATTACK_TYPES.map(t => (
               <button key={t.key} className={`btn btn-sm ${attackType === t.key ? '' : 'btn-ghost'}`}
@@ -109,9 +117,30 @@ export default function WarDetail() {
 
       {isParticipant && war.status === 'active' && (
         <div style={{ marginBottom: 16 }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => peace.mutate()} disabled={peace.isPending}>
-            {peace.isPending ? 'Offering peace…' : 'Offer Peace'}
-          </button>
+          {opponentOfferedPeace ? (
+            <div className="card" style={{ borderColor: 'var(--accent)', padding: '12px 16px' }}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>🕊 Your opponent has offered peace</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-success btn-sm" onClick={() => peace.mutate()} disabled={peace.isPending}>
+                  Accept Peace
+                </button>
+                <button className="btn btn-danger btn-sm" onClick={() => declinePeace.mutate()} disabled={declinePeace.isPending}>
+                  Decline
+                </button>
+              </div>
+            </div>
+          ) : iOfferedPeace ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: 'var(--text2)', fontSize: 13 }}>🕊 Peace offer pending…</span>
+              <button className="btn btn-ghost btn-sm" onClick={() => peace.mutate()} disabled={peace.isPending}>
+                Withdraw Offer
+              </button>
+            </div>
+          ) : (
+            <button className="btn btn-ghost btn-sm" onClick={() => peace.mutate()} disabled={peace.isPending}>
+              {peace.isPending ? 'Sending…' : 'Offer Peace'}
+            </button>
+          )}
         </div>
       )}
 
