@@ -19,4 +19,7 @@ public interface WarRepository extends JpaRepository<War, Long> {
     List<War> findPastWars(@Param("nation") Nation nation);
 
     Optional<War> findByAttackerAndDefenderAndStatus(Nation attacker, Nation defender, String status);
+
+    @Query("SELECT COUNT(w) FROM War w WHERE (w.attacker = :nation OR w.defender = :nation) AND w.status = 'active'")
+    long countActiveWarsByNation(@Param("nation") Nation nation);
 }

@@ -34,6 +34,7 @@ public class WarAttack {
     @CreationTimestamp
     private LocalDateTime date;
 
+    @Builder.Default private int chargesCost = 1;
     @Builder.Default private boolean success = false;
     @Builder.Default private long attackerSoldierCasualties = 0;
     @Builder.Default private long attackerTankCasualties = 0;

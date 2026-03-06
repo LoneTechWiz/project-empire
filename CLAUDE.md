@@ -66,6 +66,13 @@ Vite proxies `/api` to `http://localhost:8080` in dev mode.
 - Each `War` has `attackerResistance` and `defenderResistance` (both start at 100). Successful attacks reduce the defender's resistance; hitting 0 means defeat.
 - `groundControl`, `airControl`, `navalControl` on `War` track battlefield dominance (`"attacker"`, `"defender"`, or `"none"`). Control grants strength multipliers in subsequent attacks.
 - War status: `active`, `peace` (agreed), `expired` (time limit).
+- **Attack charges:** max 4 per war, 1 regenerates every 6 hours (timestamp-based). Costs: ground=1, airstrike/naval/missile=2, nuke=4. Stored as `chargesCost` on `WarAttack`.
+- **Resistance per attack:** ground=10, airstrike/naval/missile=15, nuke=20.
+- **Missiles/nukes** are consumed on use regardless of success (interceptable by defender aircraft).
+- **Infra damage** hits a random city from the defender's cities (not always the first).
+- **Loot** only applies to ground attacks (`min(defender.money * 5%, $50k)`). Air/naval/missile/nuke deal no loot.
+- **War limits:** attacker capped at 8 total active wars (offensive + defensive); defender capped at 3 defensive wars.
+- **Tank ground strength multiplier:** 8x soldiers (not 40x).
 
 **Database:** Hibernate `ddl-auto=update` auto-generates schema from JPA entities. All entities are in `com.empire.model`. Never manually set `score` — it is recalculated by `EconomyEngine.calcScore()` on every tick.
 
@@ -77,6 +84,8 @@ Vite proxies `/api` to `http://localhost:8080` in dev mode.
 - `CityController` uses reflection (`City.class.getDeclaredField(imp)`) to generically get/set improvement counts — city improvement fields on `City` must follow the naming convention `imp` + PascalCase (e.g., `impCoalmine`, `impSteelmill`). The string passed from the frontend must exactly match the field name.
 - The `projects` field on `Nation` is a JSON array stored as a `TEXT` column — deserialize/serialize manually.
 - `Nation.turns` is an action-point system for war attacks. `Nation.beigeTurns` tracks remaining turns of post-war beige (protection) status.
+- **Population growth per tick:** `naturalGrowth = (maxPop - pop) * 0.002 * densityFactor` where `densityFactor = min(idealDensity / popPerAcre, 1.0)` and `idealDensity = land / infra * 50`. Growth is then scaled by death rate (net zero at 10% death rate).
+- **Demolish refund:** 25% of what was actually paid for that copy — `baseCost * (1 + (count-1) * 0.5) * 0.25`, not flat 25% of base cost. Same logic in copy-to.
 
 ### Frontend
 

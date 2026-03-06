@@ -102,6 +102,8 @@ public class CityController {
         resp.put("impCosts", IMP_COSTS);
         resp.put("impSlots", impSlots); resp.put("impsUsed", imps[0]);
         resp.put("commerceUsed", commercePct);
+        resp.put("deathRate", economy.calcDeathRate(city));
+        resp.put("populationGrowth", economy.calcPopulationGrowth(city));
         return ResponseEntity.ok(ApiResponse.ok(resp));
     }
 
@@ -177,7 +179,7 @@ public class CityController {
             int current = (int) f.get(city);
             if (current <= 0) return ResponseEntity.badRequest().body(ApiResponse.error("Nothing to demolish."));
             f.set(city, current - 1);
-            nation.setMoney(nation.getMoney() + IMP_COSTS.get(imp) * 0.25);
+            nation.setMoney(nation.getMoney() + IMP_COSTS.get(imp) * (1 + (current - 1) * 0.5) * 0.25);
             cityRepo.save(city);
             nationRepo.save(nation);
             return ResponseEntity.ok(ApiResponse.ok(city));
@@ -215,7 +217,7 @@ public class CityController {
                         netCost += IMP_COSTS.get(imp) * (1 + i * 0.5);
                 } else if (delta < 0) {
                     for (int i = srcCount; i < tgtCount; i++)
-                        netCost -= IMP_COSTS.get(imp) * 0.25;
+                        netCost -= IMP_COSTS.get(imp) * (1 + i * 0.5) * 0.25;
                 }
             }
 

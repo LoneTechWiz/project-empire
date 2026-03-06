@@ -38,20 +38,20 @@ public class WarController {
         Nation nation = requireNation(ud);
         List<War> offensive = warRepo.findByAttackerAndStatus(nation, "active");
         List<War> defensive = warRepo.findByDefenderAndStatus(nation, "active");
-        LocalDateTime window = LocalDateTime.now().minusHours(8);
+        LocalDateTime window = LocalDateTime.now().minusHours(6);
         Map<Long, Long> attacksUsed = new HashMap<>();
         Map<Long, Long> nextRegenAt = new HashMap<>();
         for (War w : offensive) {
             List<WarAttack> recent = attackRepo.findByWarAndAttackerAndDateAfterOrderByDateAsc(w, nation, window);
-            attacksUsed.put(w.getId(), (long) recent.size());
+            attacksUsed.put(w.getId(), recent.stream().mapToLong(WarAttack::getChargesCost).sum());
             if (!recent.isEmpty()) nextRegenAt.put(w.getId(),
-                recent.get(0).getDate().plusHours(8).toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
+                recent.get(0).getDate().plusHours(6).toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
         }
         for (War w : defensive) {
             List<WarAttack> recent = attackRepo.findByWarAndAttackerAndDateAfterOrderByDateAsc(w, nation, window);
-            attacksUsed.put(w.getId(), (long) recent.size());
+            attacksUsed.put(w.getId(), recent.stream().mapToLong(WarAttack::getChargesCost).sum());
             if (!recent.isEmpty()) nextRegenAt.put(w.getId(),
-                recent.get(0).getDate().plusHours(8).toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
+                recent.get(0).getDate().plusHours(6).toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
         }
         return ResponseEntity.ok(ApiResponse.ok(Map.of(
             "offensive", offensive,
@@ -71,10 +71,10 @@ public class WarController {
         boolean isAttacker = war.getAttacker().getId().equals(nation.getId());
         boolean isDefender = war.getDefender().getId().equals(nation.getId());
         List<WarAttack> recentAttacks = attackRepo.findByWarAndAttackerAndDateAfterOrderByDateAsc(
-            war, nation, LocalDateTime.now().minusHours(8));
-        long attacksUsed = recentAttacks.size();
+            war, nation, LocalDateTime.now().minusHours(6));
+        long attacksUsed = recentAttacks.stream().mapToLong(WarAttack::getChargesCost).sum();
         Long nextRegenAt = recentAttacks.isEmpty() ? null :
-            recentAttacks.get(0).getDate().plusHours(8).toInstant(java.time.ZoneOffset.UTC).toEpochMilli();
+            recentAttacks.get(0).getDate().plusHours(6).toInstant(java.time.ZoneOffset.UTC).toEpochMilli();
         return ResponseEntity.ok(ApiResponse.ok(Map.of(
             "war", war, "attacks", attacks,
             "isAttacker", isAttacker, "isDefender", isDefender,
@@ -94,10 +94,10 @@ public class WarController {
         if (defender.getBeigeTurns() > 0) return fail("Target is on beige protection.");
         if (attacker.getBeigeTurns() > 0) return fail("You are on beige protection.");
 
-        if (warRepo.countByAttackerAndStatus(attacker, "active") >= 5)
-            return fail("Max offensive wars reached.");
+        if (warRepo.countActiveWarsByNation(attacker) >= 8)
+            return fail("Max total wars reached (8).");
         if (warRepo.countByDefenderAndStatus(defender, "active") >= 3)
-            return fail("Target has max defensive wars.");
+            return fail("Target has max defensive wars (3).");
         if (warRepo.findByAttackerAndDefenderAndStatus(attacker, defender, "active").isPresent())
             return fail("Already at war with this nation.");
 
@@ -131,17 +131,23 @@ public class WarController {
         boolean isDefender = war.getDefender().getId().equals(attacker.getId());
         if (!isAttacker && !isDefender) return fail("Not a participant.");
 
-        long attacksUsed = attackRepo.countByWarAndAttackerAndDateAfter(
-            war, attacker, LocalDateTime.now().minusHours(8));
-        if (attacksUsed >= 3) return fail("No attacks remaining. Charges regenerate every 8 hours.");
-
         String attackType = body.get("attackType");
+        int chargeCost = switch (attackType) {
+            case "nuke"      -> 4;
+            case "airstrike", "naval", "missile" -> 2;
+            default          -> 1;
+        };
+
+        List<WarAttack> recentAttacks = attackRepo.findByWarAndAttackerAndDateAfterOrderByDateAsc(
+            war, attacker, LocalDateTime.now().minusHours(6));
+        long chargesUsed = recentAttacks.stream().mapToLong(WarAttack::getChargesCost).sum();
+        if (chargesUsed + chargeCost > 4) return fail("Not enough charges. Need " + chargeCost + ", have " + (4 - chargesUsed) + " remaining.");
         Nation defender = isAttacker ? war.getDefender() : war.getAttacker();
         Nation freshAttacker = nationRepo.findById(attacker.getId()).orElseThrow();
         Nation freshDefender = nationRepo.findById(defender.getId()).orElseThrow();
 
         WarAttack attack = warEngine.resolveAttack(attackType, freshAttacker, freshDefender, war)
-            .war(war).attacker(freshAttacker).build();
+            .war(war).attacker(freshAttacker).chargesCost(chargeCost).build();
 
         attackRepo.save(attack);
 
@@ -166,13 +172,13 @@ public class WarController {
                 freshAttacker.setMoney(freshAttacker.getMoney() + attack.getMoneyLooted());
             }
             if (attack.getInfraDestroyed() > 0) {
-                cityRepo.findByNation(freshDefender).stream().findFirst().ifPresent(c -> {
-                    c.setInfrastructure(Math.max(0, c.getInfrastructure() - attack.getInfraDestroyed()));
-                    cityRepo.save(c);
-                });
+                List<City> defCities = cityRepo.findByNation(freshDefender);
+                if (!defCities.isEmpty()) {
+                    City target = defCities.get(new Random().nextInt(defCities.size()));
+                    target.setInfrastructure(Math.max(0, target.getInfrastructure() - attack.getInfraDestroyed()));
+                    cityRepo.save(target);
+                }
             }
-            if ("missile".equals(attackType)) freshAttacker.setMissiles(Math.max(0, freshAttacker.getMissiles() - 1));
-            if ("nuke".equals(attackType)) freshAttacker.setNukes(Math.max(0, freshAttacker.getNukes() - 1));
 
             // Update resistance
             if (isAttacker) war.setDefenderResistance(Math.max(0, war.getDefenderResistance() - attack.getResistanceChange()));
@@ -204,6 +210,10 @@ public class WarController {
             freshAttacker.setSoldiers(Math.max(0, freshAttacker.getSoldiers() - attack.getAttackerSoldierCasualties()));
             freshAttacker.setTanks(Math.max(0, freshAttacker.getTanks() - attack.getAttackerTankCasualties()));
         }
+
+        // Missiles and nukes are consumed on use regardless of success
+        if ("missile".equals(attackType)) freshAttacker.setMissiles(Math.max(0, freshAttacker.getMissiles() - 1));
+        if ("nuke".equals(attackType)) freshAttacker.setNukes(Math.max(0, freshAttacker.getNukes() - 1));
 
         nationRepo.save(freshAttacker);
         nationRepo.save(freshDefender);

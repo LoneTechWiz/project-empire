@@ -36,7 +36,7 @@ public class WarEngine {
         if (atk.getSoldiers() < 1 && atk.getTanks() < 1)
             return b.success(false).notes("No ground forces.");
 
-        double atkStr = atk.getSoldiers() + atk.getTanks() * 40.0;
+        double atkStr = atk.getSoldiers() + atk.getTanks() * 8.0;
         double defStr = def.getSoldiers() + def.getTanks() * 40.0;
 
         double atkMult = "attacker".equals(war.getGroundControl()) ? 1.5 : 1.0;
@@ -48,7 +48,7 @@ public class WarEngine {
 
         if (rng.nextDouble() <= threshold) {
             return b.success(true)
-                .resistanceChange(15)
+                .resistanceChange(10)
                 .moneyLooted(Math.min(def.getMoney() * 0.05, 50000))
                 .infraDestroyed(roll(10, 25))
                 .attackerSoldierCasualties((long) (roll(0.005, 0.015) * atk.getSoldiers()))
@@ -74,9 +74,8 @@ public class WarEngine {
 
         if (rng.nextDouble() <= threshold) {
             return b.success(true)
-                .resistanceChange(12)
+                .resistanceChange(15)
                 .infraDestroyed(roll(5, 20))
-                .moneyLooted(roll(1000, 10000))
                 .attackerAircraftCasualties((long) (roll(0.005, 0.015) * atk.getAircraft()))
                 .defenderAircraftCasualties((long) (roll(0.01, 0.03) * def.getAircraft()));
         } else {
@@ -94,9 +93,8 @@ public class WarEngine {
 
         if (rng.nextDouble() <= threshold) {
             return b.success(true)
-                .resistanceChange(12)
+                .resistanceChange(15)
                 .infraDestroyed(roll(5, 15))
-                .moneyLooted(roll(1000, 20000))
                 .attackerShipCasualties((long) (roll(0.005, 0.015) * atk.getShips()))
                 .defenderShipCasualties((long) (roll(0.01, 0.03) * def.getShips()));
         } else {
@@ -108,18 +106,28 @@ public class WarEngine {
     private WarAttack.WarAttackBuilder resolveMissile(Nation atk, Nation def) {
         WarAttack.WarAttackBuilder b = WarAttack.builder().attackType("missile");
         if (atk.getMissiles() < 1) return b.success(false).notes("No missiles.");
-        return b.success(true).resistanceChange(20)
-            .infraDestroyed(roll(100, 250))
-            .defenderSoldierCasualties((long) roll(100, 500));
+        double threshold = clamp((double) atk.getMissiles() * 2 / (atk.getMissiles() * 2 + def.getAircraft() + 1), 0.3, 0.9);
+        if (rng.nextDouble() <= threshold) {
+            return b.success(true).resistanceChange(15)
+                .infraDestroyed(roll(100, 250))
+                .defenderSoldierCasualties((long) roll(100, 500));
+        } else {
+            return b.success(false).notes("Missile intercepted by air defenses.");
+        }
     }
 
     private WarAttack.WarAttackBuilder resolveNuke(Nation atk, Nation def) {
         WarAttack.WarAttackBuilder b = WarAttack.builder().attackType("nuke");
         if (atk.getNukes() < 1) return b.success(false).notes("No nuclear weapons.");
-        return b.success(true).resistanceChange(40)
-            .infraDestroyed(roll(500, 1500))
-            .moneyLooted(roll(50000, 200000))
-            .defenderSoldierCasualties((long) roll(1000, 5000));
+        double threshold = clamp((double) atk.getNukes() * 2 / (atk.getNukes() * 2 + def.getAircraft() * 0.5 + 1), 0.5, 0.95);
+        if (rng.nextDouble() <= threshold) {
+            return b.success(true).resistanceChange(20)
+                .infraDestroyed(roll(500, 1500))
+                .moneyLooted(roll(50000, 200000))
+                .defenderSoldierCasualties((long) roll(1000, 5000));
+        } else {
+            return b.success(false).notes("Nuclear strike intercepted.");
+        }
     }
 
     public String determineOutcome(int attackerResistance, int defenderResistance) {

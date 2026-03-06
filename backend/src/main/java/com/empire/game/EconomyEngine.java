@@ -63,18 +63,62 @@ public class EconomyEngine {
     }
 
     /**
-     * Population growth per tick.
-     * Max population is determined by infrastructure.
-     * Growth rate is driven by population-per-acre: lower density = faster growth.
+     * Death rate for a city as a percentage (0–100+).
+     * Polluting improvements increase it; hospitals, police, recycling, subways reduce it.
+     */
+    public double calcDeathRate(City c) {
+        double rate = 0.5; // base
+        // Polluters
+        rate += c.getImpCoalpower()         * 0.5;
+        rate += c.getImpOilpower()          * 0.3;
+        rate += c.getImpNuclearpower()      * 0.3;
+        rate += c.getImpCoalmine()          * 0.5;
+        rate += c.getImpOilwell()           * 0.3;
+        rate += c.getImpIronmine()          * 0.4;
+        rate += c.getImpBauxitemine()       * 0.4;
+        rate += c.getImpLeadmine()          * 0.5;
+        rate += c.getImpUraniummine()       * 0.8;
+        rate += c.getImpOilrefinery()       * 0.7;
+        rate += c.getImpSteelmill()         * 0.8;
+        rate += c.getImpAluminumrefinery()  * 0.6;
+        rate += c.getImpMunitionsfactory()  * 0.5;
+        // Reducers
+        rate -= c.getImpPolicestation()     * 0.3;
+        rate -= c.getImpHospital()          * 2.5;
+        rate -= c.getImpRecyclingcenter()   * 1.0;
+        rate -= c.getImpSubway()            * 0.5;
+        return Math.max(0.0, rate);
+    }
+
+    /**
+     * Net population change per tick.
+     * Natural growth (density/infra-based) minus deaths from death rate.
+     * At 10% death rate on a balanced city (50% capacity, 1 pop/acre), deaths ≈ natural growth.
+     * Above 10% the city shrinks; below 10% it grows normally.
      */
     public long calcPopulationGrowth(City c) {
         long maxPop = (long)(c.getInfrastructure() * 1000);
         long currentPop = c.getPopulation();
-        if (currentPop >= maxPop) return 0;
-        double popPerAcre = currentPop / Math.max(c.getLand(), 1.0);
-        double densityFactor = 1.0 / Math.max(popPerAcre, 1.0);
-        double growthRate = 0.05 * Math.min(densityFactor, 1.0);
-        return Math.round((maxPop - currentPop) * growthRate);
+
+        double naturalGrowth = 0;
+        if (currentPop < maxPop) {
+            double popPerAcre = currentPop / Math.max(c.getLand(), 1.0);
+            double idealDensity = c.getLand() / Math.max(c.getInfrastructure(), 1.0) * 50.0;
+            double densityFactor = idealDensity / Math.max(popPerAcre, idealDensity);
+            double growthRate = 0.002 * densityFactor;
+            naturalGrowth = (maxPop - currentPop) * growthRate;
+        }
+
+        double deathRate = calcDeathRate(c);
+        // Growth is scaled by death rate — crossover is always exactly at 10%:
+        //   0% death rate  → full natural growth
+        //   5% death rate  → half natural growth
+        //   10% death rate → net zero
+        //   >10%           → growth term goes negative plus absolute population loss
+        long growthComponent = Math.round(naturalGrowth * (1.0 - deathRate / 10.0));
+        // Extra absolute loss above 10% so near-max cities still suffer high death rates
+        long deathLoss = Math.round(currentPop * Math.max(0.0, deathRate - 10.0) / 2000.0);
+        return Math.max(-currentPop, growthComponent - deathLoss);
     }
 
     /** Per-turn resource delta for one city. All values per-turn (every 2h = 1 turn, 12 turns/day). */
