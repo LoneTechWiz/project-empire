@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import ResIcon from '../components/ResIcon'
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 
@@ -473,8 +474,8 @@ function BankTab({ alliance, allianceId, members, isMember, isOfficer, invalidat
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px 16px' }}>
           {RESOURCES.map(r => (
             <div key={r} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ color: 'var(--text2)', textTransform: 'capitalize' }}>{r}</span>
-              <span>{fmt(alliance['bank' + r.charAt(0).toUpperCase() + r.slice(1)])}</span>
+              <span style={{ color: 'var(--text2)', fontSize: 13 }}><ResIcon r={r} size={14} /></span>
+              <span>{r === 'money' ? '$' : ''}{fmt(alliance['bank' + r.charAt(0).toUpperCase() + r.slice(1)])}</span>
             </div>
           ))}
         </div>
@@ -486,7 +487,7 @@ function BankTab({ alliance, allianceId, members, isMember, isOfficer, invalidat
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {RESOURCES.map(r => (
               <div key={r} className="form-group" style={{ marginBottom: 0 }}>
-                <label style={{ textTransform: 'capitalize' }}>{r}</label>
+                <label><ResIcon r={r} size={13} /></label>
                 <input type="number" min={0} value={deposit[r] || ''} onChange={e => setDeposit(d => ({ ...d, [r]: parseFloat(e.target.value) || 0 }))} />
               </div>
             ))}
@@ -508,7 +509,7 @@ function BankTab({ alliance, allianceId, members, isMember, isOfficer, invalidat
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {RESOURCES.map(r => (
               <div key={r} className="form-group" style={{ marginBottom: 0 }}>
-                <label style={{ textTransform: 'capitalize' }}>{r}</label>
+                <label><ResIcon r={r} size={13} /></label>
                 <input type="number" min={0} value={withdraw[r] || ''} onChange={e => setWithdraw(d => ({ ...d, [r]: parseFloat(e.target.value) || 0 }))} />
               </div>
             ))}

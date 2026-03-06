@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
+import ResIcon from '../components/ResIcon'
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n)
@@ -46,9 +47,9 @@ export default function Finance() {
         <div style={{ fontWeight: 600, marginBottom: 12 }}>Net Per Turn</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 24px' }}>
           {RESOURCES.filter(r => Math.abs(totals[r] || 0) > 0.001).map(r => (
-            <div key={r}>
-              <span style={{ color: 'var(--text2)', fontSize: 12, textTransform: 'capitalize' }}>
-                {RESOURCE_LABEL[r] || r}{' '}
+            <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: 'var(--text2)', fontSize: 12 }}>
+                <ResIcon r={r} size={13} />
               </span>
               <span style={{ fontWeight: 700, fontSize: 14, ...color(totals[r]) }}>
                 {r === 'money' ? (totals[r] >= 0 ? '+$' : '-$') + fmt(Math.abs(totals[r])) : fmtSign(totals[r])}
@@ -66,7 +67,7 @@ export default function Finance() {
             ? <div style={{ color: 'var(--text2)', fontSize: 13 }}>No revenue.</div>
             : Object.entries(revenue).map(([r, v]) => (
               <div key={r} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                <span style={{ textTransform: 'capitalize', color: 'var(--text2)' }}>{r === 'money' ? 'Money' : r}</span>
+                <span style={{ color: 'var(--text2)' }}><ResIcon r={r} size={13} /></span>
                 <span style={{ color: 'var(--green)', fontWeight: 600 }}>
                   {r === 'money' ? '+$' + fmt(v) : '+' + fmt(v)}
                 </span>
@@ -81,7 +82,7 @@ export default function Finance() {
             ? <div style={{ color: 'var(--text2)', fontSize: 13 }}>No expenditure.</div>
             : Object.entries(expenditure).map(([r, v]) => (
               <div key={r} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                <span style={{ textTransform: 'capitalize', color: 'var(--text2)' }}>{r === 'money' ? 'Money' : r}</span>
+                <span style={{ color: 'var(--text2)' }}><ResIcon r={r} size={13} /></span>
                 <span style={{ color: 'var(--red)', fontWeight: 600 }}>
                   {r === 'money' ? '-$' + fmt(Math.abs(v)) : fmt(v)}
                 </span>
@@ -95,8 +96,8 @@ export default function Finance() {
         <div style={{ fontWeight: 600, marginBottom: 12 }}>Military Upkeep</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 24px' }}>
           {Object.entries(militaryUpkeep).filter(([, v]) => Math.abs(v) > 0.001).map(([r, v]) => (
-            <div key={r}>
-              <span style={{ color: 'var(--text2)', fontSize: 12, textTransform: 'capitalize' }}>{r} </span>
+            <div key={r} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ color: 'var(--text2)', fontSize: 12 }}><ResIcon r={r} size={13} /></span>
               <span style={{ fontWeight: 600, ...color(v) }}>
                 {r === 'money' ? '-$' + fmt(Math.abs(v)) : fmt(v)}
               </span>
@@ -123,8 +124,8 @@ export default function Finance() {
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px' }}>
             {RESOURCES.filter(r => Math.abs(production[r] || 0) > 0.001).map(r => (
-              <div key={r}>
-                <span style={{ color: 'var(--text2)', fontSize: 11, textTransform: 'capitalize' }}>{r} </span>
+              <div key={r} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ color: 'var(--text2)', fontSize: 11 }}><ResIcon r={r} size={12} /></span>
                 <span style={{ fontSize: 12, fontWeight: 600, ...color(production[r]) }}>
                   {r === 'money'
                     ? (production[r] >= 0 ? '+$' : '-$') + fmt(Math.abs(production[r]))

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import ResIcon from '../components/ResIcon'
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })
 
@@ -65,7 +66,7 @@ export default function Trade() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
               {data?.resources?.map(r => (
                 <div key={r} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, padding: '8px 12px' }}>
-                  <div style={{ fontSize: 12, color: 'var(--text2)', textTransform: 'capitalize' }}>{r}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 4 }}><ResIcon r={r} size={13} /></div>
                   <div style={{ fontWeight: 600 }}>${fmt(data?.marketPrices?.[r])}</div>
                   <div style={{ fontSize: 11, color: 'var(--text2)' }}>base ${fmt(data?.basePrices?.[r])}</div>
                 </div>
@@ -140,7 +141,7 @@ export default function Trade() {
             <tbody>
               {data?.recentTrades?.map(t => (
                 <tr key={t.id}>
-                  <td style={{ textTransform: 'capitalize' }}>{t.resource}</td>
+                  <td><ResIcon r={t.resource} size={14} /></td>
                   <td>{fmt(t.quantity)}</td>
                   <td>${fmt(t.pricePerUnit)}</td>
                   <td>${fmt(t.total)}</td>
@@ -165,7 +166,7 @@ function OfferRow({ o, onAccept, onCancel, isOwn }) {
   return (
     <tr key={o.id}>
       <td><span className={`badge badge-${o.offerType === 'sell' ? 'red' : 'green'}`}>{o.offerType.toUpperCase()}</span></td>
-      <td style={{ textTransform: 'capitalize' }}>{o.resource}</td>
+      <td><ResIcon r={o.resource} size={14} /></td>
       <td>{Number(o.quantity).toLocaleString()}</td>
       <td>${Number(o.pricePerUnit).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
       <td>${Number(o.quantity * o.pricePerUnit).toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>

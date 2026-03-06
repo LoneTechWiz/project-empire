@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
 import api from '../api/client'
+import ResIcon from '../components/ResIcon'
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 
@@ -164,8 +165,8 @@ export default function CityDetail() {
               const v = production[r]
               if (!v || Math.abs(v) < 0.01) return null
               return (
-                <div key={r}>
-                  <span style={{ color: 'var(--text2)', fontSize: 12, textTransform: 'capitalize' }}>{r} </span>
+                <div key={r} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ color: 'var(--text2)', fontSize: 12 }}><ResIcon r={r} size={13} /></span>
                   <span style={{ fontWeight: 600, color: v >= 0 ? 'var(--green)' : 'var(--red)' }}>
                     {v >= 0 ? '+' : ''}{fmt(v)}
                   </span>
