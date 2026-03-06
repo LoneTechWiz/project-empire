@@ -66,7 +66,7 @@ export default function AllianceDetail() {
   const isOfficer = isMember && !isApplicant && ['Leader', 'Heir', 'Officer'].includes(myNation?.alliancePosition)
   const isLeader = isMember && ['Leader', 'Heir'].includes(myNation?.alliancePosition)
 
-  const RESOURCES = ['money', 'food', 'coal', 'oil', 'steel', 'aluminum']
+  const RESOURCES = ['money', 'food', 'coal', 'oil', 'iron', 'bauxite', 'lead', 'uranium', 'gasoline', 'munitions', 'steel', 'aluminum']
   const tabs = ['members', 'roles', 'treaties', 'bank', ...(isOfficer ? ['applicants'] : [])]
 
   return (
@@ -433,6 +433,7 @@ function BankTab({ alliance, allianceId, members, isMember, isOfficer, invalidat
   const [deposit, setDeposit] = useState({})
   const [withdraw, setWithdraw] = useState({})
   const [withdrawTarget, setWithdrawTarget] = useState('')
+  const [taxInput, setTaxInput] = useState(alliance.taxRate ?? 0)
 
   const depositMut = useMutation({
     mutationFn: body => api.post(`/alliances/${allianceId}/bank/deposit`, body),
@@ -444,11 +445,31 @@ function BankTab({ alliance, allianceId, members, isMember, isOfficer, invalidat
     onSuccess: () => { invalidate(); setWithdraw({}) },
     onError: err => setError(err.response?.data?.message || 'Failed.'),
   })
+  const taxMut = useMutation({
+    mutationFn: rate => api.post(`/alliances/${allianceId}/tax`, { taxRate: rate }),
+    onSuccess: invalidate,
+    onError: err => setError(err.response?.data?.message || 'Failed.'),
+  })
 
   return (
     <div>
       <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ fontWeight: 600, marginBottom: 12 }}>Alliance Bank</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ fontWeight: 600 }}>Alliance Bank</div>
+          <div style={{ fontSize: 13, color: 'var(--text2)' }}>
+            Tax Rate: <strong style={{ color: 'var(--text1)' }}>{alliance.taxRate ?? 0}%</strong>
+            {isOfficer && (
+              <span style={{ marginLeft: 12, display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                <input
+                  type="number" min={0} max={50} value={taxInput}
+                  onChange={e => setTaxInput(Number(e.target.value))}
+                  style={{ width: 60, padding: '2px 6px', fontSize: 13 }}
+                />
+                <button className="btn btn-sm" onClick={() => taxMut.mutate(taxInput)} disabled={taxMut.isPending}>Set</button>
+              </span>
+            )}
+          </div>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px 16px' }}>
           {RESOURCES.map(r => (
             <div key={r} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>

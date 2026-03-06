@@ -19,7 +19,7 @@ export default function Finance() {
   if (isLoading) return <div className="loading">Loading…</div>
   if (!data) return <div className="page">No data.</div>
 
-  const { cities, militaryUpkeep, totals } = data
+  const { cities, militaryUpkeep, totals, warnings } = data
 
   // Split totals into revenue (positive) and expenditure (negative)
   const revenue = {}
@@ -32,6 +32,14 @@ export default function Finance() {
   return (
     <div className="page">
       <h1 className="page-title" style={{ marginBottom: 16 }}>Finance</h1>
+
+      {warnings?.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          {warnings.map((w, i) => (
+            <div key={i} className="alert alert-error">{w}</div>
+          ))}
+        </div>
+      )}
 
       {/* Net summary */}
       <div className="card" style={{ marginBottom: 16 }}>

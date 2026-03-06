@@ -1,8 +1,130 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import api from '../api/client'
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
+const fmtMoney = n => '$' + Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })
+
+const SPY_OPS = [
+  { key: 'steal_money', label: 'Steal Money', desc: 'Steal up to 5% of target treasury (max $500k).' },
+  { key: 'sabotage_infra', label: 'Sabotage Infrastructure', desc: 'Destroy 10–50 infrastructure in a random city.' },
+  { key: 'gather_intel', label: 'Gather Intelligence', desc: 'Reveal full military composition of target.' },
+]
+
+function SpyOpsPanel({ spies }) {
+  const [search, setSearch] = useState('')
+  const [targetId, setTargetId] = useState(null)
+  const [targetName, setTargetName] = useState('')
+  const [op, setOp] = useState('steal_money')
+  const [result, setResult] = useState(null)
+  const searchTimer = useRef(null)
+
+  const { data: searchResults, isFetching } = useQuery({
+    queryKey: ['nation-search', search],
+    queryFn: () => api.get(`/nations/search?q=${encodeURIComponent(search)}`).then(r => r.data.data),
+    enabled: search.length >= 2,
+  })
+
+  const spyOp = useMutation({
+    mutationFn: () => api.post('/military/spies/operation', { operation: op, targetNationId: targetId }),
+    onSuccess: r => setResult(r.data.data),
+    onError: err => setResult({ error: err.response?.data?.message || 'Operation failed.' }),
+  })
+
+  return (
+    <div className="card" style={{ marginTop: 16 }}>
+      <div style={{ fontWeight: 600, marginBottom: 4 }}>Spy Operations</div>
+      <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 16 }}>You have {spies} spy{spies !== 1 ? 's' : ''} available. Failed operations lose 1 spy.</div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        {SPY_OPS.map(o => (
+          <button
+            key={o.key}
+            className={`btn btn-sm${op === o.key ? '' : ' btn-ghost'}`}
+            onClick={() => setOp(o.key)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 12 }}>
+        {SPY_OPS.find(o => o.key === op)?.desc}
+      </div>
+
+      <div style={{ position: 'relative', marginBottom: 12, maxWidth: 320 }}>
+        <input
+          value={targetName}
+          onChange={e => {
+            setTargetName(e.target.value)
+            setTargetId(null)
+            setSearch(e.target.value)
+          }}
+          placeholder="Search target nation…"
+          style={{ width: '100%' }}
+        />
+        {search.length >= 2 && !targetId && searchResults?.length > 0 && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+            background: 'var(--surface1)', border: '1px solid var(--border)', borderRadius: 6,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', marginTop: 2, maxHeight: 200, overflowY: 'auto'
+          }}>
+            {searchResults.map(nation => (
+              <div
+                key={nation.id}
+                onClick={() => { setTargetId(nation.id); setTargetName(nation.name); setSearch('') }}
+                style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid var(--border)' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+                onMouseLeave={e => e.currentTarget.style.background = ''}
+              >
+                <strong>{nation.name}</strong>
+                <span style={{ color: 'var(--text2)', fontSize: 11, marginLeft: 8 }}>{nation.leaderName}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <button
+        className="btn"
+        onClick={() => { setResult(null); spyOp.mutate() }}
+        disabled={spyOp.isPending || !targetId}
+      >
+        {spyOp.isPending ? 'Executing…' : 'Execute Operation'}
+      </button>
+
+      {result && (
+        <div style={{
+          marginTop: 12, padding: 12, borderRadius: 6,
+          background: result.error ? 'rgba(239,68,68,0.1)' : result.success ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+          border: `1px solid ${result.error || !result.success ? 'var(--red)' : 'var(--green)'}`,
+          fontSize: 13
+        }}>
+          {result.error
+            ? result.error
+            : (
+              <>
+                <div style={{ fontWeight: 600, marginBottom: 6, color: result.success ? 'var(--green)' : 'var(--red)' }}>
+                  {result.success ? 'Operation Successful' : 'Operation Failed'}
+                </div>
+                <div style={{ marginBottom: result.intel ? 8 : 0 }}>{result.message}</div>
+                {result.intel && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', marginTop: 8 }}>
+                    {Object.entries(result.intel).map(([k, v]) => (
+                      <div key={k}>
+                        <span style={{ color: 'var(--text2)', fontSize: 11, textTransform: 'capitalize' }}>{k}: </span>
+                        <strong>{fmt(v)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const UNITS = [
   { key: 'soldiers',  label: 'Soldiers',  cost: '$5 + 0.01 food each' },
@@ -106,6 +228,8 @@ export default function Military() {
           </div>
         ))}
       </div>
+
+      {(n?.spies ?? 0) > 0 && <SpyOpsPanel spies={n.spies} />}
 
       <div className="grid-2" style={{ marginTop: 16 }}>
         <div className="card">
