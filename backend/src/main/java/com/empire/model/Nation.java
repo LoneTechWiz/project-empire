@@ -46,7 +46,7 @@ public class Nation {
     @Builder.Default private double score = 0;
 
     // Resources
-    @Builder.Default private double money = 500000;
+    @Builder.Default private double money = 3000000;
     @Builder.Default private double food = 3000;
     @Builder.Default private double coal = 0;
     @Builder.Default private double oil = 0;
