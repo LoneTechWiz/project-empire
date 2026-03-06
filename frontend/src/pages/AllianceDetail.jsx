@@ -68,7 +68,7 @@ export default function AllianceDetail() {
   const isLeader = isMember && ['Leader', 'Heir'].includes(myNation?.alliancePosition)
 
   const RESOURCES = ['money', 'food', 'coal', 'oil', 'iron', 'bauxite', 'lead', 'uranium', 'gasoline', 'munitions', 'steel', 'aluminum']
-  const tabs = ['members', 'roles', 'treaties', 'bank', ...(isOfficer ? ['applicants'] : [])]
+  const tabs = ['members', 'roles', 'treaties', ...(isMember && !isApplicant ? ['bank'] : []), ...(isOfficer ? ['applicants'] : [])]
 
   return (
     <div className="page">
