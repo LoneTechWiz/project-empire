@@ -37,7 +37,7 @@ public class WarEngine {
             return b.success(false).notes("No ground forces.");
 
         double atkStr = atk.getSoldiers() + atk.getTanks() * 8.0;
-        double defStr = def.getSoldiers() + def.getTanks() * 40.0;
+        double defStr = def.getSoldiers() + def.getTanks() * 8.0;
 
         double atkMult = "attacker".equals(war.getGroundControl()) ? 1.5 : 1.0;
         double defMult = "defender".equals(war.getGroundControl()) ? 1.5 : 1.0;

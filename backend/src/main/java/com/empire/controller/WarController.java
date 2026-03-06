@@ -10,7 +10,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -27,6 +26,7 @@ public class WarController {
     private final ActivityLogRepository activityLogRepo;
     private final WarEngine warEngine;
     private final MessageRepository messageRepo;
+    private final TreatyRepository treatyRepo;
 
     private Nation requireNation(UserDetails ud) {
         User user = userRepo.findByUsername(ud.getUsername()).orElseThrow();
@@ -98,6 +98,9 @@ public class WarController {
             return fail("Max total wars reached (8).");
         if (warRepo.countByDefenderAndStatus(defender, "active") >= 3)
             return fail("Target has max defensive wars (3).");
+        if (attacker.getAlliance() != null && defender.getAlliance() != null
+                && treatyRepo.findActiveTreatyBetween(attacker.getAlliance(), defender.getAlliance(), "NAP").isPresent())
+            return fail("Cannot declare war — your alliances have an active NAP treaty.");
         if (warRepo.findByAttackerAndDefenderAndStatus(attacker, defender, "active").isPresent())
             return fail("Already at war with this nation.");
 
@@ -204,6 +207,14 @@ public class WarController {
                     .message("Won war! (War #" + war.getId() + ")").build());
                 activityLogRepo.save(ActivityLog.builder().nation(loser)
                     .message("Lost war. (War #" + war.getId() + ")").build());
+                messageRepo.save(Message.builder().sender(winner).receiver(winner)
+                    .subject("War #" + war.getId() + " — Victory")
+                    .content("Your war against " + loser.getName() + " has ended in your victory.")
+                    .build());
+                messageRepo.save(Message.builder().sender(loser).receiver(loser)
+                    .subject("War #" + war.getId() + " — Defeat")
+                    .content("Your war against " + winner.getName() + " has ended in defeat. You have been placed on beige protection.")
+                    .build());
             }
         } else {
             // Failed: attacker still takes some casualties
