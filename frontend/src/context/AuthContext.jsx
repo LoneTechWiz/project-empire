@@ -13,7 +13,11 @@ export function AuthProvider({ children }) {
     if (!token) { setLoading(false); return }
     api.get('/auth/me')
       .then(r => { setUser(r.data.data.user); setNation(r.data.data.nation) })
-      .catch(() => localStorage.removeItem('token'))
+      .catch(() => {
+        // Do not clear the token here. The axios interceptor in client.js already
+        // handles 401 (invalid/expired token) by removing the token and redirecting.
+        // Clearing it here would log users out on network errors or server hiccups.
+      })
       .finally(() => setLoading(false))
   }, [])
 
