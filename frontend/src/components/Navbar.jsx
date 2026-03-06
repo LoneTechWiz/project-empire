@@ -91,7 +91,7 @@ export default function Navbar() {
       {resources.map(([label, value]) => (
         <div key={label} style={{ display: 'flex', gap: 4, alignItems: 'center', whiteSpace: 'nowrap', fontSize: 12 }}>
           {RESOURCE_IMGS[label]
-            ? <img src={RESOURCE_IMGS[label]} alt={label} style={{ width: 16, height: 16, objectFit: 'contain' }} />
+            ? <img src={RESOURCE_IMGS[label]} alt={label} style={{ width: 18, height: 18, objectFit: 'contain' }} />
             : <span style={{ fontSize: 13, lineHeight: 1 }}>💰</span>
           }
           <span style={{ fontWeight: 600 }}>{value}</span>

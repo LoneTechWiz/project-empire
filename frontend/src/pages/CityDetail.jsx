@@ -166,7 +166,7 @@ export default function CityDetail() {
               if (!v || Math.abs(v) < 0.01) return null
               return (
                 <div key={r} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ color: 'var(--text2)', fontSize: 12 }}><ResIcon r={r} size={13} /></span>
+                  <span style={{ color: 'var(--text2)', fontSize: 12 }}><ResIcon r={r} size={18} /></span>
                   <span style={{ fontWeight: 600, color: v >= 0 ? 'var(--green)' : 'var(--red)' }}>
                     {v >= 0 ? '+' : ''}{fmt(v)}
                   </span>
