@@ -90,6 +90,10 @@ journalctl --user -u empire-backend -f
 - **Infra damage** hits a random city from the defender's cities (not always the first).
 - **Loot** only applies to ground attacks (`min(defender.money * 5%, $50k)`). Air/naval/missile/nuke deal no loot.
 - **War limits:** attacker capped at 8 total active wars (offensive + defensive); defender capped at 3 defensive wars.
+- **Battlefield control:** `WarController` sets `groundControl`/`airControl`/`navalControl` to `"attacker"` or `"defender"` after each successful attack by that side. Defender casualties are applied even on failed attacks.
+- **Beige (post-war protection):** war losers receive 72 turns (~12 hours). New nations start with 432 turns.
+- **Missile/nuke requirements:** missiles require 3+ cities; nukes require 5+ cities.
+- **Spy success formula:** `min(0.95, (attackerSpies + 1) / (attackerSpies + defenderSpies + 1))` — undefended nations are ~95% easy to spy on.
 - **Tank ground strength multiplier:** 8x soldiers (not 40x).
 
 **Database:** Hibernate `ddl-auto=update` auto-generates schema from JPA entities. All entities are in `com.empire.model`. Never manually set `score` — it is recalculated by `EconomyEngine.calcScore()` on every tick.
@@ -102,10 +106,12 @@ journalctl --user -u empire-backend -f
 - `CityController` uses reflection (`City.class.getDeclaredField(imp)`) to generically get/set improvement counts — city improvement fields on `City` must follow the naming convention `imp` + PascalCase (e.g., `impCoalmine`, `impSteelmill`). The string passed from the frontend must exactly match the field name.
 - The `projects` field on `Nation` is a JSON array stored as a `TEXT` column — deserialize/serialize manually.
 - `Nation.turns` is an action-point system for war attacks. `Nation.beigeTurns` tracks remaining turns of post-war beige (protection) status.
+- **Commerce income**: `population * (commerce/100) * 1.0 / 12` per tick — the 1.0 multiplier is intentional (was deliberately increased from 0.5).
 - **Population growth per tick:** `naturalGrowth = (maxPop - pop) * 0.002 * densityFactor` where `densityFactor = min(idealDensity / popPerAcre, 1.0)` and `idealDensity = land / infra * 50`. Growth is then scaled by death rate (net zero at 10% death rate).
 - **Demolish refund:** 25% of what was actually paid for that copy — `baseCost * (1 + (count-1) * 0.5) * 0.25`, not flat 25% of base cost. Same logic in copy-to.
 - **Username login is case-insensitive** — `UserRepository` uses `findByUsernameIgnoreCase` for login and `existsByUsernameIgnoreCase` for registration. Do not change these back to the case-sensitive variants.
 - **React forms on mobile** — password managers may silently fill inputs without triggering React `onChange`. Use `new FormData(e.target)` to read actual DOM values on submit, falling back to React state.
+- **Resource icon URLs** — `ResIcon.jsx`, `Navbar.jsx`, and `Dashboard.jsx` each maintain their own hardcoded icon URL maps. When icon PNG files are updated, bump `?v=N` in all three files to bust browser cache.
 
 ### Frontend
 
