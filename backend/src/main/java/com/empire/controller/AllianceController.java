@@ -407,7 +407,7 @@ public class AllianceController {
         Nation nation = requireNation(ud);
         if (!isOfficer(nation, a)) return fail("No permission.");
 
-        int rate = Integer.parseInt(body.getOrDefault("taxRate", "0").toString());
+        int rate = ((Number) body.getOrDefault("taxRate", 0)).intValue();
         if (rate < 0 || rate > 50) return fail("Tax rate must be between 0 and 50.");
         a.setTaxRate(rate);
         return ResponseEntity.ok(ApiResponse.ok(allianceRepo.save(a)));
