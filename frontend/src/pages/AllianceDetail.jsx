@@ -50,14 +50,15 @@ export default function AllianceDetail() {
     onError: err => setError(err.response?.data?.message || 'Failed.'),
   })
 
+  const customRoles = useMemo(() => {
+    if (!data?.alliance) return []
+    try { return JSON.parse(data.alliance.roles || '[]') } catch { return [] }
+  }, [data?.alliance?.roles])
+
   if (isLoading) return <div className="loading">Loading…</div>
   if (!data) return <div className="page">Alliance not found.</div>
 
   const { alliance, members, applicants, totalScore, treaties } = data
-
-  const customRoles = useMemo(() => {
-    try { return JSON.parse(alliance.roles || '[]') } catch { return [] }
-  }, [alliance.roles])
 
   const myNation = nation
   const isMember = myNation?.alliance?.id === alliance.id || myNation?.allianceId === parseInt(id)

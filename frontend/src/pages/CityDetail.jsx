@@ -15,25 +15,25 @@ const IMP_LABELS = {
 }
 // Static effects per improvement. Farm food is dynamic (land-based), handled separately.
 const IMP_EFFECTS = {
-  impCoalpower:        ['+500 ⚡', '-1.2 coal'],
-  impOilpower:         ['+500 ⚡', '-1.5 oil'],
-  impNuclearpower:     ['+2000 ⚡', '-2.4 uranium'],
+  impCoalpower:        ['+500 ⚡', '-1.2 coal', '+0.5% death'],
+  impOilpower:         ['+500 ⚡', '-1.5 oil', '+0.3% death'],
+  impNuclearpower:     ['+2000 ⚡', '-2.4 uranium', '+0.3% death'],
   impWindpower:        ['+250 ⚡'],
-  impCoalmine:         ['+3 coal', '-3 ⚡'],
-  impOilwell:          ['+3 oil', '-3 ⚡'],
-  impIronmine:         ['+3 iron', '-3 ⚡'],
-  impBauxitemine:      ['+3 bauxite', '-3 ⚡'],
-  impLeadmine:         ['+3 lead', '-3 ⚡'],
-  impUraniummine:      ['+3 uranium', '-3 ⚡'],
+  impCoalmine:         ['+3 coal', '-3 ⚡', '+0.5% death'],
+  impOilwell:          ['+3 oil', '-3 ⚡', '+0.3% death'],
+  impIronmine:         ['+3 iron', '-3 ⚡', '+0.4% death'],
+  impBauxitemine:      ['+3 bauxite', '-3 ⚡', '+0.4% death'],
+  impLeadmine:         ['+3 lead', '-3 ⚡', '+0.5% death'],
+  impUraniummine:      ['+3 uranium', '-3 ⚡', '+0.8% death'],
   impFarm:             [null, '-2 ⚡'], // food is dynamic
-  impOilrefinery:      ['+6 gasoline', '-3 oil', '-6 ⚡'],
-  impSteelmill:        ['+9 steel', '-3 coal', '-3 iron', '-6 ⚡'],
-  impAluminumrefinery: ['+9 aluminum', '-3 bauxite', '-6 ⚡'],
-  impMunitionsfactory: ['+18 munitions', '-6 lead', '-8 ⚡'],
-  impPolicestation:    ['+1% commerce', '-1.5 ⚡'],
-  impHospital:         ['+1% commerce', '-1.5 ⚡'],
-  impRecyclingcenter:  ['+2% commerce', '-1.5 ⚡'],
-  impSubway:           ['+8% commerce', '-1.5 ⚡'],
+  impOilrefinery:      ['+6 gasoline', '-3 oil', '-6 ⚡', '+0.7% death'],
+  impSteelmill:        ['+9 steel', '-3 coal', '-3 iron', '-6 ⚡', '+0.8% death'],
+  impAluminumrefinery: ['+9 aluminum', '-3 bauxite', '-6 ⚡', '+0.6% death'],
+  impMunitionsfactory: ['+18 munitions', '-6 lead', '-8 ⚡', '+0.5% death'],
+  impPolicestation:    ['+1% commerce', '-1.5 ⚡', '-0.3% death'],
+  impHospital:         ['+1% commerce', '-1.5 ⚡', '-2.5% death'],
+  impRecyclingcenter:  ['+2% commerce', '-1.5 ⚡', '-1.0% death'],
+  impSubway:           ['+8% commerce', '-1.5 ⚡', '-0.5% death'],
   impSupermarket:      ['+3% commerce', '-1.5 ⚡'],
   impBank:             ['+5% commerce', '-1.5 ⚡'],
   impMall:             ['+9% commerce', '-1.5 ⚡'],
@@ -88,7 +88,7 @@ export default function CityDetail() {
   if (isLoading) return <div className="loading">Loading…</div>
   if (!data) return <div className="page">City not found.</div>
 
-  const { city, impCosts, impSlots, impsUsed, commerceUsed, powerAvailable, powerNeeded, production } = data
+  const { city, impCosts, impSlots, impsUsed, commerceUsed, powerAvailable, powerNeeded, production, deathRate, populationGrowth } = data
 
   return (
     <div className="page">
@@ -176,6 +176,17 @@ export default function CityDetail() {
         <div>
           <span style={{ color: 'var(--text2)', fontSize: 12 }}>Population </span>
           <span style={{ fontWeight: 600 }}>{fmt(city.population)}</span>
+          {populationGrowth !== undefined && (
+            <span style={{ fontSize: 11, marginLeft: 4, color: populationGrowth >= 0 ? 'var(--green)' : 'var(--red)' }}>
+              ({populationGrowth >= 0 ? '+' : ''}{fmt(populationGrowth)}/turn)
+            </span>
+          )}
+        </div>
+        <div>
+          <span style={{ color: 'var(--text2)', fontSize: 12 }}>Death Rate </span>
+          <span style={{ fontWeight: 600, color: deathRate > 10 ? 'var(--red)' : deathRate > 5 ? 'var(--yellow)' : 'inherit' }}>
+            {Number(deathRate || 0).toFixed(1)}%
+          </span>
         </div>
       </div>
 

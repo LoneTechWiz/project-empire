@@ -85,17 +85,18 @@ tr:hover td { background: var(--surface2); }
 
 /* ── Navbar ── */
 .nav-links-desktop { display: flex; gap: 4px; }
-.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .hamburger-btn { display: none; background: transparent; border: 1px solid var(--border); color: var(--text2); font-size: 18px; padding: 4px 10px; cursor: pointer; border-radius: var(--radius); line-height: 1; }
 .mobile-nav { display: flex; flex-direction: column; background: var(--surface); padding: 8px 16px 14px; border-bottom: 1px solid var(--border); }
 
-/* Desktop: resources run inline between nav links and right controls */
-.nav-resources {
-  flex: 1; display: flex; gap: 14px; align-items: center;
-  overflow-x: auto; padding: 0 12px; min-width: 0;
+/* Desktop: resource + next turn row below the main nav bar */
+.desktop-resource-bar {
+  display: flex; gap: 14px; align-items: center;
+  padding: 6px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface); overflow-x: auto; flex-wrap: nowrap;
   scrollbar-width: none;
 }
-.nav-resources::-webkit-scrollbar { display: none; }
+.desktop-resource-bar::-webkit-scrollbar { display: none; }
 
 /* Mobile: resource strip lives below the nav bar as a separate row */
 .mobile-resource-bar {
@@ -115,8 +116,8 @@ tr:hover td { background: var(--surface2); }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .nav-links-desktop { display: none; }
   .nav-right { display: none; }
-  .nav-resources { display: none; }
   .hamburger-btn { display: inline-flex; margin-left: auto; }
+  .desktop-resource-bar { display: none; }
   .mobile-resource-bar { display: flex; }
   .page { padding: 16px 12px; }
   .page-title { font-size: 18px; }
