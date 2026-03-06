@@ -111,7 +111,7 @@ export default function Navbar() {
       <nav style={{ padding: '0 16px', display: 'flex', alignItems: 'center', gap: 8, height: 52 }}>
         <Link to="/" onClick={closeMenu} style={{ fontWeight: 900, fontSize: 17, color: 'var(--text)', letterSpacing: '-0.5px', whiteSpace: 'nowrap', marginRight: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ color: 'var(--accent)', fontSize: 20 }}>⚔</span>
-          <span><span style={{ color: 'var(--accent)' }}>Project</span> Empire</span>
+          <span><span style={{ color: 'var(--accent)' }}>Project</span> Empires</span>
         </Link>
 
         <div className="nav-links-desktop">

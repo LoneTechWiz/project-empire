@@ -1,4 +1,4 @@
-# Project Empire
+# Project Empires
 
 A browser-based nation-building and strategy game. Build cities, manage resources, grow your economy, wage wars, and form alliances with other players in real time.
 

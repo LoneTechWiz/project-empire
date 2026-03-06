@@ -16,7 +16,7 @@ sudo service postgresql start
 sudo -u postgres psql -c "CREATE USER empire WITH PASSWORD 'empire';"
 sudo -u postgres psql -c "CREATE DATABASE empire OWNER empire;"
 
-# Run backend (port 8080)
+# Run backend (port 8180)
 cd backend && mvn spring-boot:run
 
 # Run tests
@@ -44,7 +44,7 @@ cd frontend && npm install && npm run dev   # port 5173
 cd frontend && npm run build               # production build to dist/
 ```
 
-Vite proxies `/api` to `http://localhost:8080` in dev mode.
+Vite proxies `/api` to `http://localhost:8180` in dev mode.
 
 ## Architecture
 
@@ -89,6 +89,8 @@ Vite proxies `/api` to `http://localhost:8080` in dev mode.
 - `Nation.turns` is an action-point system for war attacks. `Nation.beigeTurns` tracks remaining turns of post-war beige (protection) status.
 - **Population growth per tick:** `naturalGrowth = (maxPop - pop) * 0.002 * densityFactor` where `densityFactor = min(idealDensity / popPerAcre, 1.0)` and `idealDensity = land / infra * 50`. Growth is then scaled by death rate (net zero at 10% death rate).
 - **Demolish refund:** 25% of what was actually paid for that copy — `baseCost * (1 + (count-1) * 0.5) * 0.25`, not flat 25% of base cost. Same logic in copy-to.
+- **Username login is case-insensitive** — `UserRepository` uses `findByUsernameIgnoreCase` for login and `existsByUsernameIgnoreCase` for registration. Do not change these back to the case-sensitive variants.
+- **React forms on mobile** — password managers may silently fill inputs without triggering React `onChange`. Use `new FormData(e.target)` to read actual DOM values on submit, falling back to React state.
 
 ### Frontend
 
