@@ -69,9 +69,18 @@ sudo -u postgres psql -c "CREATE USER empire WITH PASSWORD 'empire';"
 sudo -u postgres psql -c "CREATE DATABASE empire OWNER empire;"
 ```
 
+### Environment setup
+
+```bash
+cp .env.example .env
+# Edit .env and fill in your values, then:
+source .env
+```
+
 ### Backend
 
 ```bash
+source .env   # required — sets DB credentials and JWT secret
 cd backend
 mvn spring-boot:run
 # Runs on http://localhost:8180
@@ -89,14 +98,16 @@ npm run dev
 
 ### Environment variables (backend)
 
-| Variable | Default | Description |
-|---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/empire` | PostgreSQL JDBC URL |
-| `DB_USER` | `empire` | DB username |
-| `DB_PASSWORD` | `empire` | DB password |
-| `JWT_SECRET` | dev string | Must be 256+ bits in production |
-| `TICK_MS` | `600000` | Game tick interval in ms (10 min) |
-| `CORS_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Allowed frontend origins |
+All variables are **required** — no hardcoded defaults. Copy `.env.example` to `.env` and fill in your values.
+
+| Variable | Description |
+|---|---|
+| `DB_URL` | PostgreSQL JDBC URL (`jdbc:postgresql://host:5432/dbname`) |
+| `DB_USER` | DB username |
+| `DB_PASSWORD` | DB password |
+| `JWT_SECRET` | Random secret, 256+ bits (generate with `openssl rand -base64 48`) |
+| `TICK_MS` | Game tick interval in ms (default: `600000` = 10 min) |
+| `CORS_ORIGINS` | Comma-separated allowed frontend origins |
 
 ---
 
