@@ -181,7 +181,7 @@ public class EconomyEngine {
 
         // Commerce → money (based on population and commerce rate)
         long population = c.getPopulation();
-        double moneyPerTurn = (population * (commerce / 100.0) * 1.0) / 12.0;
+        double moneyPerTurn = (population * (commerce / 100.0) * 0.5) / 12.0;
         d.put("money", moneyPerTurn);
 
         // Food consumption by population

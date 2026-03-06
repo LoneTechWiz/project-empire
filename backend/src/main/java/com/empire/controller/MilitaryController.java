@@ -108,6 +108,7 @@ public class MilitaryController {
                     nation.setMoney(nation.getMoney() - money);
                 }
                 case "missiles" -> {
+                    if (cityCount < 3) return fail("Missiles require at least 3 cities.");
                     double money = 150000.0*qty, alum = 100.0*qty, gas = 75.0*qty, mun = 75.0*qty;
                     if (nation.getMoney() < money || nation.getAluminum() < alum
                         || nation.getGasoline() < gas || nation.getMunitions() < mun)
@@ -119,6 +120,7 @@ public class MilitaryController {
                     nation.setMunitions(nation.getMunitions() - mun);
                 }
                 case "nukes" -> {
+                    if (cityCount < 5) return fail("Nuclear weapons require at least 5 cities.");
                     double money = 1750000.0*qty, alum = 750.0*qty, gas = 500.0*qty,
                            mun = 375.0*qty, ura = 250.0*qty;
                     if (nation.getMoney() < money || nation.getAluminum() < alum
@@ -197,7 +199,7 @@ public class MilitaryController {
         if (target == null) return fail("Target nation not found.");
         if (target.getId().equals(attacker.getId())) return fail("Cannot target yourself.");
 
-        double successChance = (double) attacker.getSpies() / (attacker.getSpies() + target.getSpies() + 1);
+        double successChance = Math.min(0.95, (double)(attacker.getSpies() + 1) / (attacker.getSpies() + target.getSpies() + 1));
         boolean success = Math.random() < successChance;
 
         Map<String, Object> result = new HashMap<>();

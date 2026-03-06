@@ -155,6 +155,14 @@ public class WarController {
         attackRepo.save(attack);
 
         if (attack.isSuccess()) {
+            // Update battlefield control
+            String controller = isAttacker ? "attacker" : "defender";
+            switch (attackType) {
+                case "ground"    -> war.setGroundControl(controller);
+                case "airstrike" -> war.setAirControl(controller);
+                case "naval"     -> war.setNavalControl(controller);
+            }
+
             // Apply attacker casualties
             freshAttacker.setSoldiers(Math.max(0, freshAttacker.getSoldiers() - attack.getAttackerSoldierCasualties()));
             freshAttacker.setTanks(Math.max(0, freshAttacker.getTanks() - attack.getAttackerTankCasualties()));
@@ -197,11 +205,11 @@ public class WarController {
                 if ("attacker_victory".equals(outcome)) {
                     freshAttacker.setOffensiveWarsWon(freshAttacker.getOffensiveWarsWon() + 1);
                     freshDefender.setDefensiveWarsLost(freshDefender.getDefensiveWarsLost() + 1);
-                    freshDefender.setBeigeTurns(3);
+                    freshDefender.setBeigeTurns(72);
                 } else {
                     freshDefender.setDefensiveWarsWon(freshDefender.getDefensiveWarsWon() + 1);
                     freshAttacker.setOffensiveWarsLost(freshAttacker.getOffensiveWarsLost() + 1);
-                    freshAttacker.setBeigeTurns(3);
+                    freshAttacker.setBeigeTurns(72);
                 }
                 activityLogRepo.save(ActivityLog.builder().nation(winner)
                     .message("Won war! (War #" + war.getId() + ")").build());
@@ -220,6 +228,13 @@ public class WarController {
             // Failed: attacker still takes some casualties
             freshAttacker.setSoldiers(Math.max(0, freshAttacker.getSoldiers() - attack.getAttackerSoldierCasualties()));
             freshAttacker.setTanks(Math.max(0, freshAttacker.getTanks() - attack.getAttackerTankCasualties()));
+            freshAttacker.setAircraft(Math.max(0, freshAttacker.getAircraft() - attack.getAttackerAircraftCasualties()));
+            freshAttacker.setShips(Math.max(0, freshAttacker.getShips() - attack.getAttackerShipCasualties()));
+            freshAttacker.setSoldierCasualties(freshAttacker.getSoldierCasualties() + attack.getAttackerSoldierCasualties());
+            // Defender also takes casualties repelling the attack
+            freshDefender.setSoldiers(Math.max(0, freshDefender.getSoldiers() - attack.getDefenderSoldierCasualties()));
+            freshDefender.setAircraft(Math.max(0, freshDefender.getAircraft() - attack.getDefenderAircraftCasualties()));
+            freshDefender.setSoldierCasualties(freshDefender.getSoldierCasualties() + attack.getDefenderSoldierCasualties());
         }
 
         // Missiles and nukes are consumed on use regardless of success

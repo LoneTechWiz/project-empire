@@ -89,7 +89,8 @@ public class WarEngine {
         WarAttack.WarAttackBuilder b = WarAttack.builder().attackType("naval");
         if (atk.getShips() < 1) return b.success(false).notes("No ships.");
 
-        double threshold = clamp((double) atk.getShips() / (atk.getShips() + def.getShips() + 1), 0.1, 0.9);
+        double atkNavMult = "attacker".equals(war.getNavalControl()) ? 1.5 : ("defender".equals(war.getNavalControl()) ? 0.75 : 1.0);
+        double threshold = clamp(atk.getShips() * atkNavMult / (atk.getShips() * atkNavMult + def.getShips() + 1), 0.1, 0.9);
 
         if (rng.nextDouble() <= threshold) {
             return b.success(true)
