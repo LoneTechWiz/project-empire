@@ -5,17 +5,17 @@ import api from '../api/client'
 import { useQuery } from '@tanstack/react-query'
 
 const RESOURCE_IMGS = {
-  'Food': '/img/icons/resources/food.png',
-  'Coal': '/img/icons/resources/coal.png',
-  'Oil': '/img/icons/resources/oil.png',
-  'Iron': '/img/icons/resources/iron.png',
-  'Bauxite': '/img/icons/resources/bauxite.png',
-  'Lead': '/img/icons/resources/lead.png',
-  'Uranium': '/img/icons/resources/uranium.png',
-  'Gasoline': '/img/icons/resources/gasoline.png',
-  'Munitions': '/img/icons/resources/munitions.png',
-  'Steel': '/img/icons/resources/steel.png',
-  'Aluminum': '/img/icons/resources/aluminum.png',
+  'Food': '/img/icons/resources/food.png?v=3',
+  'Coal': '/img/icons/resources/coal.png?v=3',
+  'Oil': '/img/icons/resources/oil.png?v=3',
+  'Iron': '/img/icons/resources/iron.png?v=3',
+  'Bauxite': '/img/icons/resources/bauxite.png?v=3',
+  'Lead': '/img/icons/resources/lead.png?v=3',
+  'Uranium': '/img/icons/resources/uranium.png?v=3',
+  'Gasoline': '/img/icons/resources/gasoline.png?v=3',
+  'Munitions': '/img/icons/resources/munitions.png?v=3',
+  'Steel': '/img/icons/resources/steel.png?v=3',
+  'Aluminum': '/img/icons/resources/aluminum.png?v=3',
 }
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })

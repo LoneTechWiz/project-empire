@@ -1,15 +1,15 @@
 const IMGS = {
-  food:      '/img/icons/resources/food.png',
-  coal:      '/img/icons/resources/coal.png',
-  oil:       '/img/icons/resources/oil.png',
-  iron:      '/img/icons/resources/iron.png',
-  bauxite:   '/img/icons/resources/bauxite.png',
-  lead:      '/img/icons/resources/lead.png',
-  uranium:   '/img/icons/resources/uranium.png',
-  gasoline:  '/img/icons/resources/gasoline.png',
-  munitions: '/img/icons/resources/munitions.png',
-  steel:     '/img/icons/resources/steel.png',
-  aluminum:  '/img/icons/resources/aluminum.png',
+  food:      '/img/icons/resources/food.png?v=3',
+  coal:      '/img/icons/resources/coal.png?v=3',
+  oil:       '/img/icons/resources/oil.png?v=3',
+  iron:      '/img/icons/resources/iron.png?v=3',
+  bauxite:   '/img/icons/resources/bauxite.png?v=3',
+  lead:      '/img/icons/resources/lead.png?v=3',
+  uranium:   '/img/icons/resources/uranium.png?v=3',
+  gasoline:  '/img/icons/resources/gasoline.png?v=3',
+  munitions: '/img/icons/resources/munitions.png?v=3',
+  steel:     '/img/icons/resources/steel.png?v=3',
+  aluminum:  '/img/icons/resources/aluminum.png?v=3',
 }
 
 // Inline resource icon + optional label
