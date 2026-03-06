@@ -90,6 +90,30 @@ public class EconomyEngine {
         return Math.max(0.0, rate);
     }
 
+    /** Per-improvement breakdown of death rate contributions (positive = adds death, negative = reduces). */
+    public Map<String, Double> calcDeathRateBreakdown(City c) {
+        Map<String, Double> b = new java.util.LinkedHashMap<>();
+        b.put("base", 0.5);
+        if (c.getImpCoalpower() > 0)         b.put("coalPower",         c.getImpCoalpower()         * 0.5);
+        if (c.getImpOilpower() > 0)          b.put("oilPower",          c.getImpOilpower()          * 0.3);
+        if (c.getImpNuclearpower() > 0)      b.put("nuclearPower",      c.getImpNuclearpower()      * 0.3);
+        if (c.getImpCoalmine() > 0)          b.put("coalMine",          c.getImpCoalmine()          * 0.5);
+        if (c.getImpOilwell() > 0)           b.put("oilWell",           c.getImpOilwell()           * 0.3);
+        if (c.getImpIronmine() > 0)          b.put("ironMine",          c.getImpIronmine()          * 0.4);
+        if (c.getImpBauxitemine() > 0)       b.put("bauxiteMine",       c.getImpBauxitemine()       * 0.4);
+        if (c.getImpLeadmine() > 0)          b.put("leadMine",          c.getImpLeadmine()          * 0.5);
+        if (c.getImpUraniummine() > 0)       b.put("uraniumMine",       c.getImpUraniummine()       * 0.8);
+        if (c.getImpOilrefinery() > 0)       b.put("oilRefinery",       c.getImpOilrefinery()       * 0.7);
+        if (c.getImpSteelmill() > 0)         b.put("steelMill",         c.getImpSteelmill()         * 0.8);
+        if (c.getImpAluminumrefinery() > 0)  b.put("aluminumRefinery",  c.getImpAluminumrefinery()  * 0.6);
+        if (c.getImpMunitionsfactory() > 0)  b.put("munitionsFactory",  c.getImpMunitionsfactory()  * 0.5);
+        if (c.getImpPolicestation() > 0)     b.put("policeStation",     -c.getImpPolicestation()    * 0.3);
+        if (c.getImpHospital() > 0)          b.put("hospital",          -c.getImpHospital()         * 2.5);
+        if (c.getImpRecyclingcenter() > 0)   b.put("recyclingCenter",   -c.getImpRecyclingcenter()  * 1.0);
+        if (c.getImpSubway() > 0)            b.put("subway",            -c.getImpSubway()           * 0.5);
+        return b;
+    }
+
     /**
      * Net population change per tick.
      * Natural growth (density/infra-based) minus deaths from death rate.
@@ -157,7 +181,7 @@ public class EconomyEngine {
 
         // Commerce → money (based on population and commerce rate)
         long population = c.getPopulation();
-        double moneyPerTurn = (population * (commerce / 100.0) * 0.5) / 12.0;
+        double moneyPerTurn = (population * (commerce / 100.0) * 1.0) / 12.0;
         d.put("money", moneyPerTurn);
 
         // Food consumption by population

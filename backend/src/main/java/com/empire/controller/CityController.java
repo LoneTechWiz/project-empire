@@ -103,6 +103,7 @@ public class CityController {
         resp.put("impSlots", impSlots); resp.put("impsUsed", imps[0]);
         resp.put("commerceUsed", commercePct);
         resp.put("deathRate", economy.calcDeathRate(city));
+        resp.put("deathRateBreakdown", economy.calcDeathRateBreakdown(city));
         resp.put("populationGrowth", economy.calcPopulationGrowth(city));
         return ResponseEntity.ok(ApiResponse.ok(resp));
     }

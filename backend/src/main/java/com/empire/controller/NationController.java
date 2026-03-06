@@ -46,6 +46,7 @@ public class NationController {
             .governmentType(body.getOrDefault("governmentType", "Republic"))
             .religion(body.getOrDefault("religion", "None"))
             .capital(capital)
+            .beigeTurns(432)
             .build());
 
         cityRepo.save(City.builder().nation(nation).name(capital)
@@ -93,10 +94,17 @@ public class NationController {
         Map<String, Double> milUpkeep = economy.calcMilitaryUpkeep(nation);
         milUpkeep.forEach((k, v) -> totals.merge(k, v, Double::sum));
 
+        List<String> warnings = new ArrayList<>();
+        if (totals.getOrDefault("food", 0.0) < 0)
+            warnings.add("Food deficit — your population is starving. Build farms or reduce population.");
+        if (totals.getOrDefault("money", 0.0) < 0)
+            warnings.add("Money deficit — you are spending more than you earn. Reduce military or build commerce improvements.");
+
         return ResponseEntity.ok(ApiResponse.ok(Map.of(
             "cities", cityBreakdown,
             "militaryUpkeep", milUpkeep,
-            "totals", totals
+            "totals", totals,
+            "warnings", warnings
         )));
     }
 
