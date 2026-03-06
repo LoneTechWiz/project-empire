@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../api/client'
 
 export default function Messages() {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const [params] = useSearchParams()
   const composeId = params.get('compose')
   const composeName = params.get('name')
-  const [tab, setTab] = useState(composeId ? 'compose' : 'inbox')
+  const [tab, setTab] = useState(composeId ? 'compose' : 'conversations')
   const [form, setForm] = useState({ receiverId: composeId || '', subject: '', content: '' })
   const [error, setError] = useState('')
 
@@ -19,43 +20,85 @@ export default function Messages() {
 
   const send = useMutation({
     mutationFn: body => api.post('/messages', body),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['messages'] }); setForm({ receiverId: '', subject: '', content: '' }); setTab('sent') },
+    onSuccess: res => {
+      qc.invalidateQueries({ queryKey: ['messages'] })
+      setForm({ receiverId: '', subject: '', content: '' })
+      navigate(`/messages/${res.data.data.conversationId}`)
+    },
     onError: err => setError(err.response?.data?.message || 'Failed.')
   })
 
+  const receiverId = parseInt(form.receiverId)
+  const { data: recipientData } = useQuery({
+    queryKey: ['nation', receiverId],
+    queryFn: () => api.get(`/nations/${receiverId}`).then(r => r.data.data),
+    enabled: !!receiverId && receiverId > 0,
+    retry: false,
+  })
+  const recipientNation = recipientData?.nation || recipientData
+  const recipientName = receiverId > 0 ? recipientNation?.leaderName : null
+
   if (isLoading) return <div className="loading">Loading…</div>
+
+  const conversations = data?.conversations || []
 
   return (
     <div className="page">
       <h1 className="page-title" style={{ marginBottom: 16 }}>Messages</h1>
       <div className="tab-bar">
-        <div className={`tab ${tab === 'inbox' ? 'active' : ''}`} onClick={() => setTab('inbox')}>
-          Inbox {data?.unread > 0 && <span className="badge badge-yellow" style={{ marginLeft: 4 }}>{data.unread}</span>}
+        <div className={`tab ${tab === 'conversations' ? 'active' : ''}`} onClick={() => setTab('conversations')}>
+          Conversations {data?.unread > 0 && <span className="badge badge-yellow" style={{ marginLeft: 4 }}>{data.unread}</span>}
         </div>
-        <div className={`tab ${tab === 'sent' ? 'active' : ''}`} onClick={() => setTab('sent')}>Sent</div>
         <div className={`tab ${tab === 'compose' ? 'active' : ''}`} onClick={() => setTab('compose')}>Compose</div>
       </div>
 
-      {tab === 'inbox' && (
+      {tab === 'conversations' && (
         <div className="card">
-          <MsgList msgs={data?.inbox} emptyText="No messages." />
-        </div>
-      )}
-
-      {tab === 'sent' && (
-        <div className="card">
-          <MsgList msgs={data?.sent} emptyText="No sent messages." sent />
+          {conversations.length === 0
+            ? <div style={{ color: 'var(--text2)', fontSize: 13 }}>No messages.</div>
+            : (
+              <table>
+                <thead>
+                  <tr><th>With</th><th>Subject</th><th>Messages</th><th>Latest</th></tr>
+                </thead>
+                <tbody>
+                  {conversations.map(conv => (
+                    <tr key={conv.conversationId} style={{ opacity: conv.unread === 0 ? 0.7 : 1 }}>
+                      <td><Link to={`/nations/${conv.otherParty?.id}`}>{conv.otherParty?.leaderName || conv.otherParty?.name}</Link></td>
+                      <td style={{ fontWeight: conv.unread > 0 ? 700 : 400 }}>
+                        <Link to={`/messages/${conv.conversationId}`} style={{ color: 'inherit' }}>
+                          {conv.subject || '(no subject)'}
+                        </Link>
+                        {conv.unread > 0 && <span className="badge badge-blue" style={{ marginLeft: 8 }}>{conv.unread} new</span>}
+                      </td>
+                      <td style={{ color: 'var(--text2)', fontSize: 12 }}>{conv.messageCount}</td>
+                      <td style={{ color: 'var(--text2)', fontSize: 12 }}>{new Date(conv.latestMessage?.sentAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
         </div>
       )}
 
       {tab === 'compose' && (
         <div className="card" style={{ maxWidth: 560 }}>
           <div style={{ fontWeight: 600, marginBottom: 16 }}>
-            {composeName ? `Message to ${composeName}` : 'New Message'}
+            {recipientNation
+              ? `Message to ${recipientNation.leaderName} of ${recipientNation.name}`
+              : composeName ? `Message to ${composeName}` : 'New Message'}
           </div>
           {error && <div className="alert alert-error">{error}</div>}
-          <div className="form-group"><label>Recipient Nation ID</label>
+          <div className="form-group">
+            <label>Recipient Nation ID</label>
             <input type="number" value={form.receiverId} onChange={e => setForm(f => ({ ...f, receiverId: e.target.value }))} required />
+            {form.receiverId && (
+              <div style={{ marginTop: 4, fontSize: 12 }}>
+                {recipientName
+                  ? <span style={{ color: 'var(--green)' }}>{recipientName}</span>
+                  : receiverId > 0 ? <span style={{ color: 'var(--text2)' }}>Looking up…</span> : null}
+              </div>
+            )}
           </div>
           <div className="form-group"><label>Subject</label>
             <input value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} />
@@ -69,31 +112,5 @@ export default function Messages() {
         </div>
       )}
     </div>
-  )
-}
-
-function MsgList({ msgs, emptyText, sent }) {
-  if (!msgs?.length) return <div style={{ color: 'var(--text2)', fontSize: 13 }}>{emptyText}</div>
-  return (
-    <table>
-      <thead><tr><th>{sent ? 'To' : 'From'}</th><th>Subject</th><th>Date</th><th></th></tr></thead>
-      <tbody>
-        {msgs.map(m => (
-          <tr key={m.id} style={{ opacity: (!sent && m.read) ? .6 : 1 }}>
-            <td>
-              <Link to={`/nations/${sent ? m.receiver?.id : m.sender?.id}`}>
-                {sent ? m.receiver?.name : m.sender?.name}
-              </Link>
-            </td>
-            <td style={{ fontWeight: !sent && !m.read ? 700 : 400 }}>
-              {m.subject || '(no subject)'}
-              {!sent && !m.read && <span className="badge badge-blue" style={{ marginLeft: 8 }}>New</span>}
-            </td>
-            <td style={{ fontSize: 12, color: 'var(--text2)' }}>{new Date(m.sentAt).toLocaleDateString()}</td>
-            <td><Link to={`/messages/${m.id}`} className="btn btn-ghost btn-sm">Read</Link></td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
   )
 }

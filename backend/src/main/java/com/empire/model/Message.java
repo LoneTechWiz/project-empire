@@ -36,4 +36,7 @@ public class Message {
     private LocalDateTime sentAt;
 
     @Builder.Default private boolean read = false;
+
+    // Links replies into the same conversation; equals the first message's id
+    private Long conversationId;
 }

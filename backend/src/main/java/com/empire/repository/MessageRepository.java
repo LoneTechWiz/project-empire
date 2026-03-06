@@ -9,4 +9,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByReceiverOrderBySentAtDesc(Nation receiver);
     List<Message> findBySenderOrderBySentAtDesc(Nation sender);
     long countByReceiverAndReadFalse(Nation receiver);
+    List<Message> findBySenderOrReceiverOrderBySentAtAsc(Nation sender, Nation receiver);
+    List<Message> findByConversationIdOrderBySentAtAsc(Long conversationId);
+    long countByConversationIdAndReceiverAndReadFalse(Long conversationId, Nation receiver);
 }
