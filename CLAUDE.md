@@ -50,6 +50,9 @@ Vite proxies `/api` to `http://localhost:8080` in dev mode.
 
 **Monorepo:** `backend/` (Spring Boot) + `frontend/` (React/Vite). No shared build system — run each independently.
 
+## Git Conventions
+- Do NOT add `Co-Authored-By` or any Claude/AI authorship lines to commit messages.
+
 ### Backend
 
 **Request flow:**
