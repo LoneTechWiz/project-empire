@@ -81,7 +81,7 @@ export default function Navbar() {
       ))}
       {countdown && (
         <div style={{ display: 'flex', gap: 4, alignItems: 'baseline', whiteSpace: 'nowrap', fontSize: 12, marginLeft: 'auto' }}>
-          <span style={{ color: 'var(--text2)' }}>Tick</span>
+          <span style={{ color: 'var(--text2)' }}>Next Turn</span>
           <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{countdown}</span>
         </div>
       )}
@@ -104,15 +104,9 @@ export default function Navbar() {
             <NavLink to="/military">Military</NavLink>
             <NavLink to="/wars">Wars</NavLink>
             <NavLink to="/trade">Trade</NavLink>
+            <NavLink to="/finance">Finance</NavLink>
           </>}
         </div>
-
-        {/* Resources inline in desktop nav bar */}
-        {user && nation && resources.length > 0 && (
-          <div className="nav-resources">
-            <ResourceItems />
-          </div>
-        )}
 
         <div className="nav-right">
           <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6 }}>
@@ -121,7 +115,7 @@ export default function Navbar() {
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Link to="/messages" style={{ color: msgData > 0 ? 'var(--yellow)' : 'var(--text2)', fontSize: 13, whiteSpace: 'nowrap' }}>
-                Msgs{msgData > 0 ? ` (${msgData})` : ''}
+                Messages{msgData > 0 ? ` (${msgData})` : ''}
               </Link>
               {nation
                 ? <Link to="/dashboard" style={{ color: 'var(--text)', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{nation.name}</Link>
@@ -142,9 +136,16 @@ export default function Navbar() {
         </button>
       </nav>
 
+      {/* Desktop: resource + next turn row below nav */}
+      {user && nation && resources.length > 0 && (
+        <div className="desktop-resource-bar hide-mobile">
+          <ResourceItems />
+        </div>
+      )}
+
       {/* Mobile: resource strip always visible below nav */}
       {user && nation && resources.length > 0 && (
-        <div className="mobile-resource-bar">
+        <div className="mobile-resource-bar hide-desktop">
           <ResourceItems />
         </div>
       )}
@@ -160,6 +161,7 @@ export default function Navbar() {
             <MobileNavLink to="/military" onClick={closeMenu}>Military</MobileNavLink>
             <MobileNavLink to="/wars" onClick={closeMenu}>Wars</MobileNavLink>
             <MobileNavLink to="/trade" onClick={closeMenu}>Trade</MobileNavLink>
+            <MobileNavLink to="/finance" onClick={closeMenu}>Finance</MobileNavLink>
           </>}
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6 }}>

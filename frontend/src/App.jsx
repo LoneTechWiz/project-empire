@@ -16,6 +16,7 @@ import Alliances from './pages/Alliances'
 import AllianceDetail from './pages/AllianceDetail'
 import AllianceCreate from './pages/AllianceCreate'
 import Trade from './pages/Trade'
+import Finance from './pages/Finance'
 import Rankings from './pages/Rankings'
 import Messages from './pages/Messages'
 import MessageDetail from './pages/MessageDetail'
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="/wars" element={<Protected><Wars /></Protected>} />
         <Route path="/wars/:id" element={<Protected><WarDetail /></Protected>} />
         <Route path="/trade" element={<Protected><Trade /></Protected>} />
+        <Route path="/finance" element={<Protected><Finance /></Protected>} />
         <Route path="/messages" element={<Protected><Messages /></Protected>} />
         <Route path="/messages/:id" element={<Protected><MessageDetail /></Protected>} />
       </Routes>

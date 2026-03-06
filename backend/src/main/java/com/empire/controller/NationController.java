@@ -65,6 +65,41 @@ public class NationController {
             .orElse(ResponseEntity.ok(ApiResponse.ok(null)));
     }
 
+    @GetMapping("/mine/finances")
+    public ResponseEntity<?> finances(@AuthenticationPrincipal UserDetails ud) {
+        User user = userRepo.findByUsername(ud.getUsername()).orElseThrow();
+        Nation nation = nationRepo.findByUser(user).orElseThrow();
+        List<City> cities = cityRepo.findByNation(nation);
+
+        List<Map<String, Object>> cityBreakdown = new ArrayList<>();
+        Map<String, Double> totals = new HashMap<>();
+
+        for (City c : cities) {
+            Map<String, Double> prod = economy.calcCityProduction(c, nation);
+            double[] pw = economy.getCityPower(c);
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("city", c);
+            entry.put("production", prod);
+            entry.put("commerce", economy.getCityCommerce(c));
+            entry.put("powered", pw[0] >= pw[1]);
+            entry.put("powerAvailable", pw[0]);
+            entry.put("powerNeeded", pw[1]);
+            entry.put("deathRate", economy.calcDeathRate(c));
+            entry.put("populationGrowth", economy.calcPopulationGrowth(c));
+            cityBreakdown.add(entry);
+            prod.forEach((k, v) -> totals.merge(k, v, Double::sum));
+        }
+
+        Map<String, Double> milUpkeep = economy.calcMilitaryUpkeep(nation);
+        milUpkeep.forEach((k, v) -> totals.merge(k, v, Double::sum));
+
+        return ResponseEntity.ok(ApiResponse.ok(Map.of(
+            "cities", cityBreakdown,
+            "militaryUpkeep", milUpkeep,
+            "totals", totals
+        )));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Long id) {
         return nationRepo.findById(id)
