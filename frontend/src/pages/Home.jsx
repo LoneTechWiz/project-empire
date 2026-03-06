@@ -1,38 +1,95 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+const FEATURES = [
+  {
+    icon: '🏙️',
+    title: 'Build & Expand',
+    desc: 'Found cities, construct improvements, and grow your economic power through infrastructure and industry.',
+    color: 'rgba(79,142,247,0.15)',
+    border: 'rgba(79,142,247,0.3)',
+  },
+  {
+    icon: '⚔️',
+    title: 'Wage War',
+    desc: 'Command ground troops, aircraft, naval fleets, missiles, and nuclear weapons against your enemies.',
+    color: 'rgba(239,68,68,0.12)',
+    border: 'rgba(239,68,68,0.25)',
+  },
+  {
+    icon: '🤝',
+    title: 'Trade & Diplomacy',
+    desc: 'Buy and sell resources on the open market. Join alliances, sign treaties, and collaborate with allies.',
+    color: 'rgba(34,197,94,0.12)',
+    border: 'rgba(34,197,94,0.25)',
+  },
+  {
+    icon: '🕵️',
+    title: 'Espionage',
+    desc: 'Train spies to steal money, sabotage enemy infrastructure, or gather military intelligence on rivals.',
+    color: 'rgba(124,58,237,0.12)',
+    border: 'rgba(124,58,237,0.25)',
+  },
+  {
+    icon: '☢️',
+    title: 'Nuclear Arsenal',
+    desc: 'Research and build missiles and nuclear warheads. Use them to devastate enemy cities and end wars.',
+    color: 'rgba(234,179,8,0.12)',
+    border: 'rgba(234,179,8,0.25)',
+  },
+  {
+    icon: '🏦',
+    title: 'Alliance Banking',
+    desc: 'Pool resources in your alliance bank, collect taxes from members, and fund your allies in times of war.',
+    color: 'rgba(79,142,247,0.12)',
+    border: 'rgba(79,142,247,0.25)',
+  },
+]
+
 export default function Home() {
   const { user, nation } = useAuth()
   return (
-    <div className="page" style={{ maxWidth: 800, textAlign: 'center', paddingTop: 80 }}>
-      <h1 style={{ fontSize: 48, fontWeight: 800, marginBottom: 16 }}>
-        <span style={{ color: 'var(--accent)' }}>Project</span> Empire
-      </h1>
-      <p style={{ color: 'var(--text2)', fontSize: 18, marginBottom: 40 }}>
-        Build your nation. Command armies. Forge alliances. Dominate the world.
-      </p>
-      <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-        {user ? (
-          nation
-            ? <Link to="/dashboard" className="btn" style={{ fontSize: 15, padding: '10px 28px' }}>Go to Dashboard</Link>
-            : <Link to="/nation/create" className="btn" style={{ fontSize: 15, padding: '10px 28px' }}>Create Your Nation</Link>
-        ) : <>
-          <Link to="/register" className="btn" style={{ fontSize: 15, padding: '10px 28px' }}>Get Started</Link>
-          <Link to="/login" className="btn btn-ghost" style={{ fontSize: 15, padding: '10px 28px' }}>Login</Link>
-        </>}
-        <Link to="/rankings" className="btn btn-ghost" style={{ fontSize: 15, padding: '10px 28px' }}>View Rankings</Link>
+    <div style={{ minHeight: '100vh' }}>
+      {/* Hero */}
+      <div style={{ textAlign: 'center', padding: '100px 16px 70px', maxWidth: 700, margin: '0 auto' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(79,142,247,0.1)', border: '1px solid rgba(79,142,247,0.25)', borderRadius: 99, padding: '4px 14px', fontSize: 12, color: 'var(--accent)', fontWeight: 600, marginBottom: 24 }}>
+          <span>⚔</span> Browser-Based Nation Builder
+        </div>
+        <h1 style={{ fontSize: 'clamp(36px,7vw,64px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', marginBottom: 20 }}>
+          <span style={{ color: 'var(--accent)' }}>Project</span>{' '}
+          <span style={{ color: 'var(--text)' }}>Empire</span>
+        </h1>
+        <p style={{ color: 'var(--text2)', fontSize: 17, lineHeight: 1.7, marginBottom: 40, maxWidth: 520, margin: '0 auto 40px' }}>
+          Build your nation. Command armies. Forge alliances. Dominate the world.
+        </p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {user ? (
+            nation
+              ? <Link to="/dashboard" className="btn" style={{ fontSize: 15, padding: '11px 32px' }}>Go to Dashboard →</Link>
+              : <Link to="/nation/create" className="btn" style={{ fontSize: 15, padding: '11px 32px' }}>Create Your Nation →</Link>
+          ) : <>
+            <Link to="/register" className="btn" style={{ fontSize: 15, padding: '11px 32px' }}>Get Started Free →</Link>
+            <Link to="/login" className="btn btn-ghost" style={{ fontSize: 15, padding: '11px 28px' }}>Login</Link>
+          </>}
+          <Link to="/rankings" className="btn btn-ghost" style={{ fontSize: 15, padding: '11px 28px' }}>View Rankings</Link>
+        </div>
       </div>
-      <div className="grid-3" style={{ marginTop: 60, textAlign: 'left' }}>
-        {[
-          { title: 'Build & Expand', desc: 'Found cities, construct improvements, and grow your economic power through infrastructure and industry.' },
-          { title: 'Wage War', desc: 'Command ground troops, aircraft, naval fleets, missiles, and nuclear weapons against your enemies.' },
-          { title: 'Trade & Diplomacy', desc: 'Buy and sell resources on the open market. Join alliances, deposit to alliance banks, and collaborate with allies.' },
-        ].map(f => (
-          <div key={f.title} className="card" style={{ marginTop: 0 }}>
-            <div style={{ fontWeight: 700, marginBottom: 8 }}>{f.title}</div>
-            <p style={{ color: 'var(--text2)', fontSize: 13 }}>{f.desc}</p>
-          </div>
-        ))}
+
+      {/* Features */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 16px 80px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Everything you need</div>
+          <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px' }}>A complete geopolitical simulation</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+          {FEATURES.map(f => (
+            <div key={f.title} className="card card-hover" style={{ background: f.color, border: `1px solid ${f.border}`, padding: 24 }}>
+              <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>{f.title}</div>
+              <p style={{ color: 'var(--text2)', fontSize: 13, lineHeight: 1.6 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

@@ -49,21 +49,27 @@ export default function Rankings() {
                   <th className="hide-mobile">Alliance</th>
                 </tr></thead>
                 <tbody>
-                  {nations?.map(n => (
-                    <tr key={n.id}>
-                      <td style={{ color: 'var(--text2)', fontWeight: n.rank <= 3 ? 700 : 400 }}>#{n.rank}</td>
-                      <td>
-                        <Link to={`/nations/${n.id}`} style={{ fontWeight: 600 }}>{n.name}</Link>
-                        <div style={{ fontSize: 12, color: 'var(--text2)' }}>{n.leaderName}</div>
-                      </td>
-                      <td>{fmt(n.score)}</td>
-                      <td className="hide-mobile">{n.cityCount}</td>
-                      <td className="hide-mobile">{fmt(n.soldiers)}</td>
-                      <td className="hide-mobile">{fmt(n.tanks)}</td>
-                      <td className="hide-mobile">{fmt(n.aircraft)}</td>
-                      <td className="hide-mobile">{n.allianceName ? <Link to={`/alliances/${n.allianceId}`}>{n.allianceName}</Link> : <span style={{ color: 'var(--text2)' }}>—</span>}</td>
-                    </tr>
-                  ))}
+                  {nations?.map(n => {
+                    const medals = { 1: '🥇', 2: '🥈', 3: '🥉' }
+                    const medal = medals[n.rank]
+                    return (
+                      <tr key={n.id} style={n.rank <= 3 ? { background: `rgba(${n.rank === 1 ? '234,179,8' : n.rank === 2 ? '148,163,184' : '180,83,9'},0.05)` } : {}}>
+                        <td style={{ fontWeight: n.rank <= 3 ? 800 : 400 }}>
+                          {medal ? <span style={{ fontSize: 16 }}>{medal}</span> : <span style={{ color: 'var(--text2)' }}>#{n.rank}</span>}
+                        </td>
+                        <td>
+                          <Link to={`/nations/${n.id}`} style={{ fontWeight: 600 }}>{n.name}</Link>
+                          <div style={{ fontSize: 12, color: 'var(--text2)' }}>{n.leaderName}</div>
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{fmt(n.score)}</td>
+                        <td className="hide-mobile">{n.cityCount}</td>
+                        <td className="hide-mobile">{fmt(n.soldiers)}</td>
+                        <td className="hide-mobile">{fmt(n.tanks)}</td>
+                        <td className="hide-mobile">{fmt(n.aircraft)}</td>
+                        <td className="hide-mobile">{n.allianceName ? <Link to={`/alliances/${n.allianceId}`}>{n.allianceName}</Link> : <span style={{ color: 'var(--text2)' }}>—</span>}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             )}
@@ -80,18 +86,24 @@ export default function Rankings() {
                 <th className="hide-mobile">Color</th>
               </tr></thead>
               <tbody>
-                {alliances?.map(a => (
-                  <tr key={a.id}>
-                    <td style={{ color: 'var(--text2)', fontWeight: a.rank <= 3 ? 700 : 400 }}>#{a.rank}</td>
-                    <td>
-                      <Link to={`/alliances/${a.id}`} style={{ fontWeight: 600 }}>{a.name}</Link>
-                      <span style={{ color: 'var(--text2)', marginLeft: 8, fontSize: 12 }}>[{a.acronym}]</span>
-                    </td>
-                    <td>{a.memberCount}</td>
-                    <td>{fmt(a.totalScore)}</td>
-                    <td className="hide-mobile"><span style={{ background: a.color, padding: '2px 8px', borderRadius: 4, fontSize: 12, color: '#000' }}>{a.color}</span></td>
-                  </tr>
-                ))}
+                {alliances?.map(a => {
+                  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' }
+                  const medal = medals[a.rank]
+                  return (
+                    <tr key={a.id} style={a.rank <= 3 ? { background: `rgba(${a.rank === 1 ? '234,179,8' : a.rank === 2 ? '148,163,184' : '180,83,9'},0.05)` } : {}}>
+                      <td style={{ fontWeight: a.rank <= 3 ? 800 : 400 }}>
+                        {medal ? <span style={{ fontSize: 16 }}>{medal}</span> : <span style={{ color: 'var(--text2)' }}>#{a.rank}</span>}
+                      </td>
+                      <td>
+                        <Link to={`/alliances/${a.id}`} style={{ fontWeight: 600 }}>{a.name}</Link>
+                        <span style={{ color: 'var(--text2)', marginLeft: 8, fontSize: 12 }}>[{a.acronym}]</span>
+                      </td>
+                      <td>{a.memberCount}</td>
+                      <td style={{ fontWeight: 600 }}>{fmt(a.totalScore)}</td>
+                      <td className="hide-mobile"><span style={{ background: a.color, padding: '2px 8px', borderRadius: 4, fontSize: 12, color: '#000' }}>{a.color}</span></td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}

@@ -1,14 +1,21 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useState, useEffect } from 'react'
 import api from '../api/client'
 import { useQuery } from '@tanstack/react-query'
+
+const RESOURCE_ICONS = {
+  '$': '💰', 'Food': '🌾', 'Coal': '🪨', 'Oil': '🛢', 'Iron': '⚙️',
+  'Bauxite': '🪩', 'Lead': '🔩', 'Uranium': '☢', 'Gasoline': '⛽',
+  'Munitions': '💣', 'Steel': '🔧', 'Aluminum': '✈️',
+}
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 
 export default function Navbar() {
   const { user, nation, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [search, setSearch] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -74,25 +81,26 @@ export default function Navbar() {
   const ResourceItems = () => (
     <>
       {resources.map(([label, value]) => (
-        <div key={label} style={{ display: 'flex', gap: 4, alignItems: 'baseline', whiteSpace: 'nowrap', fontSize: 12 }}>
-          <span style={{ color: 'var(--text2)' }}>{label}</span>
+        <div key={label} style={{ display: 'flex', gap: 4, alignItems: 'center', whiteSpace: 'nowrap', fontSize: 12 }}>
+          <span style={{ fontSize: 13, lineHeight: 1 }}>{RESOURCE_ICONS[label]}</span>
           <span style={{ fontWeight: 600 }}>{value}</span>
         </div>
       ))}
       {countdown && (
-        <div style={{ display: 'flex', gap: 4, alignItems: 'baseline', whiteSpace: 'nowrap', fontSize: 12, marginLeft: 'auto' }}>
-          <span style={{ color: 'var(--text2)' }}>Next Turn</span>
-          <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{countdown}</span>
+        <div style={{ display: 'flex', gap: 5, alignItems: 'center', whiteSpace: 'nowrap', fontSize: 12, marginLeft: 'auto', padding: '2px 8px', background: 'rgba(79,142,247,0.1)', borderRadius: 20, border: '1px solid rgba(79,142,247,0.2)' }}>
+          <span style={{ color: 'var(--text2)' }}>Turn in</span>
+          <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{countdown}</span>
         </div>
       )}
     </>
   )
 
   return (
-    <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+    <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)' }}>
       <nav style={{ padding: '0 16px', display: 'flex', alignItems: 'center', gap: 8, height: 52 }}>
-        <Link to="/" onClick={closeMenu} style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)', letterSpacing: '-0.5px', whiteSpace: 'nowrap', marginRight: 8 }}>
-          <span style={{ color: 'var(--accent)' }}>Project</span> Empire
+        <Link to="/" onClick={closeMenu} style={{ fontWeight: 900, fontSize: 17, color: 'var(--text)', letterSpacing: '-0.5px', whiteSpace: 'nowrap', marginRight: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ color: 'var(--accent)', fontSize: 20 }}>⚔</span>
+          <span><span style={{ color: 'var(--accent)' }}>Project</span> Empire</span>
         </Link>
 
         <div className="nav-links-desktop">
@@ -189,8 +197,16 @@ export default function Navbar() {
 }
 
 function NavLink({ to, children }) {
+  const location = useLocation()
+  const isActive = location.pathname === to || (to !== '/' && location.pathname.startsWith(to))
   return (
-    <Link to={to} style={{ padding: '0 10px', color: 'var(--text2)', fontSize: 13, fontWeight: 500, lineHeight: '52px', borderBottom: '2px solid transparent', whiteSpace: 'nowrap' }}
+    <Link to={to} style={{
+      padding: '0 12px', fontSize: 13, fontWeight: isActive ? 700 : 500,
+      lineHeight: '52px', whiteSpace: 'nowrap',
+      color: isActive ? 'var(--text)' : 'var(--text2)',
+      borderBottom: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}`,
+      transition: 'color 0.15s, border-color 0.15s',
+    }}
       className="navlink">{children}</Link>
   )
 }
