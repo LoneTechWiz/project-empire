@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
@@ -31,7 +31,7 @@ export default function Trade() {
     onError: err => setError(err.response?.data?.message || 'Failed.')
   })
   const accept = useMutation({
-    mutationFn: id => api.post(`/trade/${id}/accept`),
+    mutationFn: ({ id, quantity }) => api.post(`/trade/${id}/accept`, { quantity }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['trade'] }); qc.invalidateQueries({ queryKey: ['nation-mine'] }) },
     onError: err => setError(err.response?.data?.message || 'Failed.')
   })
@@ -94,7 +94,7 @@ export default function Trade() {
 
           <div className="card">
             <div style={{ fontWeight: 600, marginBottom: 12 }}>Active Offers</div>
-            <OffersTable offers={otherOffers} onAccept={id => accept.mutate(id)} />
+            <OffersTable offers={otherOffers} onAccept={(id, quantity) => accept.mutate({ id, quantity })} />
           </div>
         </>
       )}
@@ -157,6 +157,40 @@ export default function Trade() {
   )
 }
 
+function OfferRow({ o, onAccept, onCancel, isOwn }) {
+  const [qty, setQty] = useState(String(o.quantity))
+  const parsedQty = parseFloat(qty)
+  const valid = !isNaN(parsedQty) && parsedQty > 0 && parsedQty <= o.quantity
+
+  return (
+    <tr key={o.id}>
+      <td><span className={`badge badge-${o.offerType === 'sell' ? 'red' : 'green'}`}>{o.offerType.toUpperCase()}</span></td>
+      <td style={{ textTransform: 'capitalize' }}>{o.resource}</td>
+      <td>{Number(o.quantity).toLocaleString()}</td>
+      <td>${Number(o.pricePerUnit).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+      <td>${Number(o.quantity * o.pricePerUnit).toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+      <td><Link to={`/nations/${o.nation?.id}`}>{o.nation?.name}</Link></td>
+      <td>
+        {isOwn
+          ? <button className="btn btn-danger btn-sm" onClick={() => onCancel(o.id)}>Cancel</button>
+          : (
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <input
+                type="number" min={0.01} max={o.quantity} step="any"
+                value={qty} onChange={e => setQty(e.target.value)}
+                style={{ width: 80, padding: '3px 6px' }}
+              />
+              <button className="btn btn-sm" onClick={() => onAccept(o.id, parsedQty)} disabled={!valid}>
+                {o.offerType === 'sell' ? 'Buy' : 'Sell'}
+              </button>
+            </div>
+          )
+        }
+      </td>
+    </tr>
+  )
+}
+
 function OffersTable({ offers, onAccept, onCancel, isOwn }) {
   if (!offers?.length) return <div style={{ color: 'var(--text2)', fontSize: 13 }}>No offers.</div>
   return (
@@ -164,20 +198,7 @@ function OffersTable({ offers, onAccept, onCancel, isOwn }) {
       <thead><tr><th>Type</th><th>Resource</th><th>Qty</th><th>Price</th><th>Total</th><th>Nation</th><th></th></tr></thead>
       <tbody>
         {offers.map(o => (
-          <tr key={o.id}>
-            <td><span className={`badge badge-${o.offerType === 'sell' ? 'red' : 'green'}`}>{o.offerType.toUpperCase()}</span></td>
-            <td style={{ textTransform: 'capitalize' }}>{o.resource}</td>
-            <td>{Number(o.quantity).toLocaleString()}</td>
-            <td>${Number(o.pricePerUnit).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-            <td>${Number(o.quantity * o.pricePerUnit).toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-            <td><Link to={`/nations/${o.nation?.id}`}>{o.nation?.name}</Link></td>
-            <td>
-              {isOwn
-                ? <button className="btn btn-danger btn-sm" onClick={() => onCancel(o.id)}>Cancel</button>
-                : <button className="btn btn-sm" onClick={() => onAccept(o.id)}>Accept</button>
-              }
-            </td>
-          </tr>
+          <OfferRow key={o.id} o={o} onAccept={onAccept} onCancel={onCancel} isOwn={isOwn} />
         ))}
       </tbody>
     </table>

@@ -86,6 +86,7 @@ public class TradeController {
 
     @PostMapping("/{id}/accept")
     public ResponseEntity<?> accept(@PathVariable Long id,
+                                    @RequestBody(required = false) Map<String, Object> body,
                                     @AuthenticationPrincipal UserDetails ud) {
         TradeOffer offer = offerRepo.findById(id).orElse(null);
         if (offer == null || !offer.isActive()) return fail("Offer not found or expired.");
@@ -93,24 +94,38 @@ public class TradeController {
         Nation accepter = requireNation(ud);
         if (offer.getNation().getId().equals(accepter.getId())) return fail("Cannot accept your own offer.");
 
+        // Determine fill quantity — defaults to full offer quantity
+        double fillQty = offer.getQuantity();
+        if (body != null && body.get("quantity") != null) {
+            fillQty = Double.parseDouble(body.get("quantity").toString());
+        }
+        if (fillQty <= 0 || fillQty > offer.getQuantity())
+            return fail("Invalid quantity.");
+
         Nation fresh = nationRepo.findById(accepter.getId()).orElseThrow();
         Nation poster = nationRepo.findById(offer.getNation().getId()).orElseThrow();
-        double total = offer.getQuantity() * offer.getPricePerUnit();
+        double total = fillQty * offer.getPricePerUnit();
 
         if ("sell".equals(offer.getOfferType())) {
             if (fresh.getMoney() < total) return fail("Not enough money.");
             fresh.setMoney(fresh.getMoney() - total);
-            addStock(fresh, offer.getResource(), offer.getQuantity());
+            addStock(fresh, offer.getResource(), fillQty);
             poster.setMoney(poster.getMoney() + total);
         } else {
             double stock = getStock(fresh, offer.getResource());
-            if (stock < offer.getQuantity()) return fail("Not enough " + offer.getResource() + ".");
-            deductStock(fresh, offer.getResource(), offer.getQuantity());
+            if (stock < fillQty) return fail("Not enough " + offer.getResource() + ".");
+            deductStock(fresh, offer.getResource(), fillQty);
             fresh.setMoney(fresh.getMoney() + total);
-            addStock(poster, offer.getResource(), offer.getQuantity());
+            addStock(poster, offer.getResource(), fillQty);
         }
 
-        offer.setActive(false);
+        // Reduce remaining quantity; deactivate only if fully filled
+        double remaining = offer.getQuantity() - fillQty;
+        if (remaining < 0.001) {
+            offer.setActive(false);
+        } else {
+            offer.setQuantity(remaining);
+        }
         offerRepo.save(offer);
         nationRepo.save(fresh);
         nationRepo.save(poster);
@@ -118,7 +133,7 @@ public class TradeController {
         historyRepo.save(TradeHistory.builder()
             .buyer("sell".equals(offer.getOfferType()) ? fresh : poster)
             .seller("sell".equals(offer.getOfferType()) ? poster : fresh)
-            .resource(offer.getResource()).quantity(offer.getQuantity())
+            .resource(offer.getResource()).quantity(fillQty)
             .pricePerUnit(offer.getPricePerUnit()).total(total).build());
 
         return ResponseEntity.ok(ApiResponse.ok("Trade completed."));
