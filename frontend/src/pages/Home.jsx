@@ -69,7 +69,7 @@ export default function Home() {
         </div>
         <h1 style={{ fontSize: 'clamp(36px,7vw,64px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', marginBottom: 20 }}>
           <span style={{ color: 'var(--accent)' }}>Project</span>{' '}
-          <span style={{ color: 'var(--text)' }}>Empire</span>
+          <span style={{ color: 'var(--text)' }}>Empires</span>
         </h1>
         <p style={{ color: 'var(--text2)', fontSize: 17, lineHeight: 1.7, marginBottom: 40, maxWidth: 520, margin: '0 auto 40px' }}>
           Build your nation. Command armies. Forge alliances. Dominate the world.

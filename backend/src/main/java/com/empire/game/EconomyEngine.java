@@ -166,7 +166,7 @@ public class EconomyEngine {
         d.merge("bauxite",  c.getImpBauxitemine()   * 3.0  * powerMult, Double::sum);
         d.merge("lead",     c.getImpLeadmine()      * 3.0  * powerMult, Double::sum);
         d.merge("uranium",  c.getImpUraniummine()   * 3.0  * powerMult, Double::sum);
-        d.merge("food",     c.getLand() * (0.05 + 0.03 * c.getImpFarm()) * powerMult, Double::sum);
+        d.merge("food",     c.getImpFarm() * (c.getLand() / 500.0) * powerMult, Double::sum);
 
         // Industry
         d.merge("gasoline",  c.getImpOilrefinery()       *  6.0 * powerMult, Double::sum);

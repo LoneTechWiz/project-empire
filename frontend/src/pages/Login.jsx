@@ -12,7 +12,10 @@ export default function Login() {
   const submit = async e => {
     e.preventDefault(); setError(''); setLoading(true)
     try {
-      const data = await login(form.username, form.password)
+      const fd = new FormData(e.target)
+      const username = fd.get('username') || form.username
+      const password = fd.get('password') || form.password
+      const data = await login(username, password)
       navigate(data.nation ? '/dashboard' : '/nation/create')
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed.')
@@ -25,10 +28,10 @@ export default function Login() {
       {error && <div className="alert alert-error">{error}</div>}
       <form onSubmit={submit} className="card">
         <div className="form-group"><label>Username</label>
-          <input value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} required />
+          <input name="username" value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} required autoCapitalize="none" autoCorrect="off" autoComplete="username" />
         </div>
         <div className="form-group"><label>Password</label>
-          <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
+          <input name="password" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required autoComplete="current-password" />
         </div>
         <button type="submit" disabled={loading} style={{ width: '100%' }}>{loading ? 'Logging in…' : 'Login'}</button>
       </form>

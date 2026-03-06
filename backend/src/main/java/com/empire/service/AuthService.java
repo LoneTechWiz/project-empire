@@ -23,7 +23,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest req) {
-        if (userRepo.existsByUsername(req.getUsername()))
+        if (userRepo.existsByUsernameIgnoreCase(req.getUsername()))
             throw new IllegalArgumentException("Username already taken.");
         if (userRepo.existsByEmail(req.getEmail()))
             throw new IllegalArgumentException("Email already in use.");
@@ -39,7 +39,7 @@ public class AuthService {
     }
 
     public AuthResponse login(String username, String rawPassword) {
-        User user = userRepo.findByUsername(username)
+        User user = userRepo.findByUsernameIgnoreCase(username)
             .orElseThrow(() -> new IllegalArgumentException("Invalid username or password."));
         if (!passwordEncoder.matches(rawPassword, user.getPasswordHash()))
             throw new IllegalArgumentException("Invalid username or password.");
