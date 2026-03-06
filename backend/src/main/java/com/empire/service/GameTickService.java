@@ -1,8 +1,10 @@
 package com.empire.service;
 
 import com.empire.game.EconomyEngine;
+import com.empire.model.Alliance;
 import com.empire.model.City;
 import com.empire.model.Nation;
+import com.empire.repository.AllianceRepository;
 import com.empire.repository.CityRepository;
 import com.empire.repository.NationRepository;
 import com.empire.repository.WarRepository;
@@ -27,6 +29,7 @@ public class GameTickService {
     private final NationRepository nationRepo;
     private final CityRepository cityRepo;
     private final WarRepository warRepo;
+    private final AllianceRepository allianceRepo;
     private final EconomyEngine economy;
 
     @Value("${game.tick.interval-ms}")
@@ -43,6 +46,7 @@ public class GameTickService {
         lastTickEpochMs = System.currentTimeMillis();
         log.info("[TICK] Applying game tick...");
         List<Nation> nations = nationRepo.findAll();
+        Map<Long, Double> taxAccumulator = new java.util.HashMap<>();
 
         for (Nation nation : nations) {
             List<City> cities = cityRepo.findByNation(nation);
@@ -60,6 +64,14 @@ public class GameTickService {
             Map<String, Double> upkeep = economy.calcMilitaryUpkeep(nation);
             upkeep.forEach((k, v) -> totals.merge(k, v, Double::sum));
 
+            // Collect alliance tax from money income before applying deltas
+            double moneyIncome = totals.getOrDefault("money", 0.0);
+            if (nation.getAlliance() != null && nation.getAlliance().getTaxRate() > 0 && moneyIncome > 0) {
+                double tax = moneyIncome * nation.getAlliance().getTaxRate() / 100.0;
+                totals.put("money", moneyIncome - tax);
+                taxAccumulator.merge(nation.getAlliance().getId(), tax, Double::sum);
+            }
+
             applyDeltas(nation, totals);
             nation.setScore(economy.calcScore(nation, cities));
             nation.setTurns(Math.min(nation.getTurns() + 1, 10));
@@ -67,6 +79,14 @@ public class GameTickService {
         }
 
         nationRepo.saveAll(nations);
+
+        // Apply accumulated tax to alliance banks
+        taxAccumulator.forEach((allianceId, amount) ->
+            allianceRepo.findById(allianceId).ifPresent(a -> {
+                a.setBankMoney(a.getBankMoney() + amount);
+                allianceRepo.save(a);
+            }));
+
 
         // Expire wars older than 5 days
         warRepo.findAll().stream()

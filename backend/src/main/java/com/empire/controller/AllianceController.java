@@ -369,6 +369,12 @@ public class AllianceController {
             case "food"      -> { if (n.getFood() >= v)      { n.setFood(n.getFood()-v);           a.setBankFood(a.getBankFood()+v); } }
             case "coal"      -> { if (n.getCoal() >= v)      { n.setCoal(n.getCoal()-v);           a.setBankCoal(a.getBankCoal()+v); } }
             case "oil"       -> { if (n.getOil() >= v)       { n.setOil(n.getOil()-v);             a.setBankOil(a.getBankOil()+v); } }
+            case "iron"      -> { if (n.getIron() >= v)      { n.setIron(n.getIron()-v);           a.setBankIron(a.getBankIron()+v); } }
+            case "bauxite"   -> { if (n.getBauxite() >= v)   { n.setBauxite(n.getBauxite()-v);     a.setBankBauxite(a.getBankBauxite()+v); } }
+            case "lead"      -> { if (n.getLead() >= v)      { n.setLead(n.getLead()-v);           a.setBankLead(a.getBankLead()+v); } }
+            case "uranium"   -> { if (n.getUranium() >= v)   { n.setUranium(n.getUranium()-v);     a.setBankUranium(a.getBankUranium()+v); } }
+            case "gasoline"  -> { if (n.getGasoline() >= v)  { n.setGasoline(n.getGasoline()-v);   a.setBankGasoline(a.getBankGasoline()+v); } }
+            case "munitions" -> { if (n.getMunitions() >= v) { n.setMunitions(n.getMunitions()-v); a.setBankMunitions(a.getBankMunitions()+v); } }
             case "steel"     -> { if (n.getSteel() >= v)     { n.setSteel(n.getSteel()-v);         a.setBankSteel(a.getBankSteel()+v); } }
             case "aluminum"  -> { if (n.getAluminum() >= v)  { n.setAluminum(n.getAluminum()-v);   a.setBankAluminum(a.getBankAluminum()+v); } }
         }});
@@ -376,12 +382,34 @@ public class AllianceController {
 
     private void transferFromBank(Alliance a, Nation n, Map<String, Double> amounts) {
         amounts.forEach((k, v) -> { if (v == null || v <= 0) return; switch (k) {
-            case "money"     -> { if (a.getBankMoney() >= v)    { a.setBankMoney(a.getBankMoney()-v);       n.setMoney(n.getMoney()+v); } }
-            case "food"      -> { if (a.getBankFood() >= v)     { a.setBankFood(a.getBankFood()-v);         n.setFood(n.getFood()+v); } }
-            case "coal"      -> { if (a.getBankCoal() >= v)     { a.setBankCoal(a.getBankCoal()-v);         n.setCoal(n.getCoal()+v); } }
-            case "oil"       -> { if (a.getBankOil() >= v)      { a.setBankOil(a.getBankOil()-v);           n.setOil(n.getOil()+v); } }
-            case "steel"     -> { if (a.getBankSteel() >= v)    { a.setBankSteel(a.getBankSteel()-v);       n.setSteel(n.getSteel()+v); } }
-            case "aluminum"  -> { if (a.getBankAluminum() >= v) { a.setBankAluminum(a.getBankAluminum()-v); n.setAluminum(n.getAluminum()+v); } }
+            case "money"     -> { if (a.getBankMoney() >= v)     { a.setBankMoney(a.getBankMoney()-v);         n.setMoney(n.getMoney()+v); } }
+            case "food"      -> { if (a.getBankFood() >= v)      { a.setBankFood(a.getBankFood()-v);           n.setFood(n.getFood()+v); } }
+            case "coal"      -> { if (a.getBankCoal() >= v)      { a.setBankCoal(a.getBankCoal()-v);           n.setCoal(n.getCoal()+v); } }
+            case "oil"       -> { if (a.getBankOil() >= v)       { a.setBankOil(a.getBankOil()-v);             n.setOil(n.getOil()+v); } }
+            case "iron"      -> { if (a.getBankIron() >= v)      { a.setBankIron(a.getBankIron()-v);           n.setIron(n.getIron()+v); } }
+            case "bauxite"   -> { if (a.getBankBauxite() >= v)   { a.setBankBauxite(a.getBankBauxite()-v);     n.setBauxite(n.getBauxite()+v); } }
+            case "lead"      -> { if (a.getBankLead() >= v)      { a.setBankLead(a.getBankLead()-v);           n.setLead(n.getLead()+v); } }
+            case "uranium"   -> { if (a.getBankUranium() >= v)   { a.setBankUranium(a.getBankUranium()-v);     n.setUranium(n.getUranium()+v); } }
+            case "gasoline"  -> { if (a.getBankGasoline() >= v)  { a.setBankGasoline(a.getBankGasoline()-v);   n.setGasoline(n.getGasoline()+v); } }
+            case "munitions" -> { if (a.getBankMunitions() >= v) { a.setBankMunitions(a.getBankMunitions()-v); n.setMunitions(n.getMunitions()+v); } }
+            case "steel"     -> { if (a.getBankSteel() >= v)     { a.setBankSteel(a.getBankSteel()-v);         n.setSteel(n.getSteel()+v); } }
+            case "aluminum"  -> { if (a.getBankAluminum() >= v)  { a.setBankAluminum(a.getBankAluminum()-v);   n.setAluminum(n.getAluminum()+v); } }
         }});
+    }
+
+    // ── Tax ──────────────────────────────────────────────────────────────────
+
+    @PostMapping("/{id}/tax")
+    public ResponseEntity<?> setTax(@PathVariable Long id, @RequestBody Map<String, Object> body,
+                                    @AuthenticationPrincipal UserDetails ud) {
+        Alliance a = allianceRepo.findById(id).orElse(null);
+        if (a == null) return fail("Not found.");
+        Nation nation = requireNation(ud);
+        if (!isOfficer(nation, a)) return fail("No permission.");
+
+        int rate = Integer.parseInt(body.getOrDefault("taxRate", "0").toString());
+        if (rate < 0 || rate > 50) return fail("Tax rate must be between 0 and 50.");
+        a.setTaxRate(rate);
+        return ResponseEntity.ok(ApiResponse.ok(allianceRepo.save(a)));
     }
 }

@@ -61,6 +61,9 @@ public class Alliance {
     @Builder.Default private double bankSteel = 0;
     @Builder.Default private double bankAluminum = 0;
 
+    // Tax rate (0–50%): collected from each member's money income each tick
+    @Builder.Default private int taxRate = 0;
+
     @OneToMany(mappedBy = "alliance", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Nation> members;
