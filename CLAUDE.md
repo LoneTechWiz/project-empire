@@ -116,6 +116,14 @@ journalctl --user -u empire-backend -f
 - **Username login is case-insensitive** — `UserRepository` uses `findByUsernameIgnoreCase` for login and `existsByUsernameIgnoreCase` for registration. Do not change these back to the case-sensitive variants.
 - **React forms on mobile** — password managers may silently fill inputs without triggering React `onChange`. Use `new FormData(e.target)` to read actual DOM values on submit, falling back to React state.
 - **Resource icon URLs** — `ResIcon.jsx`, `Navbar.jsx`, and `Dashboard.jsx` each maintain their own hardcoded icon URL maps. When icon PNG files are updated, bump `?v=N` in all three files to bust browser cache.
+- **New city starting infra:** 25 (gives 1 improvement slot via `floor(infra/25)`). Do not lower back to 20.
+- **JWT expiration:** 7 days (`jwt.expiration-ms=604800000`). Stable across backend restarts as long as `JWT_SECRET` env var doesn't change.
+- **Auth logout bug (fixed):** `AuthContext.jsx` must NOT call `localStorage.removeItem('token')` in the `/auth/me` catch handler — that logs users out on any network error or server hiccup. The `client.js` axios interceptor already handles 401 → remove token + redirect. The catch in AuthContext should be a no-op.
+- **Trade fill notifications:** When a trade offer is accepted, `TradeController` sends a message to the offer poster via `MessageRepository`. `MessageRepository` is injected into `TradeController`.
+- **Finance warnings:** `NationController /mine/finances` generates warnings for: unpowered cities, food deficit, money deficit. Dashboard fetches this endpoint to show warning banners and daily production rates.
+- **Dashboard onboarding checklist:** `OnboardingChecklist` component in `Dashboard.jsx` shows first-steps for new nations (hides when all steps complete): found city → built improvement → trained military → joined alliance.
+- **Finance per-day display:** Per-turn values × 12 = per-day. Finance page shows both; Military page shows daily upkeep.
+- **War charge display:** `MAX_ATTACKS = 4` in `Wars.jsx` (both `WarRow` and `WarCard`). Backend cap is also 4.
 
 ### Frontend
 
