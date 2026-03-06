@@ -13,7 +13,7 @@ const IMGS = {
 }
 
 // Inline resource icon + optional label
-export default function ResIcon({ r, size = 36, label }) {
+export default function ResIcon({ r, size = 22, label }) {
   const img = IMGS[r]
   const text = label !== undefined ? label : (r === 'money' ? 'Money' : r.charAt(0).toUpperCase() + r.slice(1))
   return (

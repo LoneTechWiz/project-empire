@@ -6,17 +6,17 @@ import { useAuth } from '../context/AuthContext'
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 
 const RESOURCE_META = [
-  { key: 'food',      label: 'Food',      img: '/img/icons/resources/food.png' },
-  { key: 'coal',      label: 'Coal',      img: '/img/icons/resources/coal.png' },
-  { key: 'oil',       label: 'Oil',       img: '/img/icons/resources/oil.png' },
-  { key: 'iron',      label: 'Iron',      img: '/img/icons/resources/iron.png' },
-  { key: 'bauxite',   label: 'Bauxite',   img: '/img/icons/resources/bauxite.png' },
-  { key: 'lead',      label: 'Lead',      img: '/img/icons/resources/lead.png' },
-  { key: 'uranium',   label: 'Uranium',   img: '/img/icons/resources/uranium.png' },
-  { key: 'gasoline',  label: 'Gasoline',  img: '/img/icons/resources/gasoline.png' },
-  { key: 'munitions', label: 'Munitions', img: '/img/icons/resources/munitions.png' },
-  { key: 'steel',     label: 'Steel',     img: '/img/icons/resources/steel.png' },
-  { key: 'aluminum',  label: 'Aluminum',  img: '/img/icons/resources/aluminum.png' },
+  { key: 'food',      label: 'Food',      img: '/img/icons/resources/food.png?v=3' },
+  { key: 'coal',      label: 'Coal',      img: '/img/icons/resources/coal.png?v=3' },
+  { key: 'oil',       label: 'Oil',       img: '/img/icons/resources/oil.png?v=3' },
+  { key: 'iron',      label: 'Iron',      img: '/img/icons/resources/iron.png?v=3' },
+  { key: 'bauxite',   label: 'Bauxite',   img: '/img/icons/resources/bauxite.png?v=3' },
+  { key: 'lead',      label: 'Lead',      img: '/img/icons/resources/lead.png?v=3' },
+  { key: 'uranium',   label: 'Uranium',   img: '/img/icons/resources/uranium.png?v=3' },
+  { key: 'gasoline',  label: 'Gasoline',  img: '/img/icons/resources/gasoline.png?v=3' },
+  { key: 'munitions', label: 'Munitions', img: '/img/icons/resources/munitions.png?v=3' },
+  { key: 'steel',     label: 'Steel',     img: '/img/icons/resources/steel.png?v=3' },
+  { key: 'aluminum',  label: 'Aluminum',  img: '/img/icons/resources/aluminum.png?v=3' },
 ]
 
 const MILITARY_META = [

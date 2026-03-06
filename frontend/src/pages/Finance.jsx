@@ -49,7 +49,7 @@ export default function Finance() {
           {RESOURCES.filter(r => Math.abs(totals[r] || 0) > 0.001).map(r => (
             <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ color: 'var(--text2)', fontSize: 12 }}>
-                <ResIcon r={r} size={36}/>
+                <ResIcon r={r} size={22}/>
               </span>
               <span style={{ fontWeight: 700, fontSize: 14, ...color(totals[r]) }}>
                 {r === 'money' ? (totals[r] >= 0 ? '+$' : '-$') + fmt(Math.abs(totals[r])) : fmtSign(totals[r])}
@@ -67,7 +67,7 @@ export default function Finance() {
             ? <div style={{ color: 'var(--text2)', fontSize: 13 }}>No revenue.</div>
             : Object.entries(revenue).map(([r, v]) => (
               <div key={r} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                <span style={{ color: 'var(--text2)' }}><ResIcon r={r} size={36}/></span>
+                <span style={{ color: 'var(--text2)' }}><ResIcon r={r} size={22}/></span>
                 <span style={{ color: 'var(--green)', fontWeight: 600 }}>
                   {r === 'money' ? '+$' + fmt(v) : '+' + fmt(v)}
                 </span>
@@ -82,7 +82,7 @@ export default function Finance() {
             ? <div style={{ color: 'var(--text2)', fontSize: 13 }}>No expenditure.</div>
             : Object.entries(expenditure).map(([r, v]) => (
               <div key={r} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                <span style={{ color: 'var(--text2)' }}><ResIcon r={r} size={36}/></span>
+                <span style={{ color: 'var(--text2)' }}><ResIcon r={r} size={22}/></span>
                 <span style={{ color: 'var(--red)', fontWeight: 600 }}>
                   {r === 'money' ? '-$' + fmt(Math.abs(v)) : fmt(v)}
                 </span>
@@ -97,7 +97,7 @@ export default function Finance() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 24px' }}>
           {Object.entries(militaryUpkeep).filter(([, v]) => Math.abs(v) > 0.001).map(([r, v]) => (
             <div key={r} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ color: 'var(--text2)', fontSize: 12 }}><ResIcon r={r} size={36}/></span>
+              <span style={{ color: 'var(--text2)', fontSize: 12 }}><ResIcon r={r} size={22}/></span>
               <span style={{ fontWeight: 600, ...color(v) }}>
                 {r === 'money' ? '-$' + fmt(Math.abs(v)) : fmt(v)}
               </span>
@@ -125,7 +125,7 @@ export default function Finance() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px' }}>
             {RESOURCES.filter(r => Math.abs(production[r] || 0) > 0.001).map(r => (
               <div key={r} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ color: 'var(--text2)', fontSize: 11 }}><ResIcon r={r} size={36}/></span>
+                <span style={{ color: 'var(--text2)', fontSize: 11 }}><ResIcon r={r} size={22}/></span>
                 <span style={{ fontSize: 12, fontWeight: 600, ...color(production[r]) }}>
                   {r === 'money'
                     ? (production[r] >= 0 ? '+$' : '-$') + fmt(Math.abs(production[r]))

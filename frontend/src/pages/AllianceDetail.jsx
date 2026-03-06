@@ -474,7 +474,7 @@ function BankTab({ alliance, allianceId, members, isMember, isOfficer, invalidat
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px 16px' }}>
           {RESOURCES.map(r => (
             <div key={r} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ color: 'var(--text2)', fontSize: 13 }}><ResIcon r={r} size={36}/></span>
+              <span style={{ color: 'var(--text2)', fontSize: 13 }}><ResIcon r={r} size={22}/></span>
               <span>{r === 'money' ? '$' : ''}{fmt(alliance['bank' + r.charAt(0).toUpperCase() + r.slice(1)])}</span>
             </div>
           ))}
@@ -487,7 +487,7 @@ function BankTab({ alliance, allianceId, members, isMember, isOfficer, invalidat
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {RESOURCES.map(r => (
               <div key={r} className="form-group" style={{ marginBottom: 0 }}>
-                <label><ResIcon r={r} size={36}/></label>
+                <label><ResIcon r={r} size={22}/></label>
                 <input type="number" min={0} value={deposit[r] || ''} onChange={e => setDeposit(d => ({ ...d, [r]: parseFloat(e.target.value) || 0 }))} />
               </div>
             ))}
@@ -509,7 +509,7 @@ function BankTab({ alliance, allianceId, members, isMember, isOfficer, invalidat
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {RESOURCES.map(r => (
               <div key={r} className="form-group" style={{ marginBottom: 0 }}>
-                <label><ResIcon r={r} size={36}/></label>
+                <label><ResIcon r={r} size={22}/></label>
                 <input type="number" min={0} value={withdraw[r] || ''} onChange={e => setWithdraw(d => ({ ...d, [r]: parseFloat(e.target.value) || 0 }))} />
               </div>
             ))}
