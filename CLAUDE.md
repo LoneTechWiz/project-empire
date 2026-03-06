@@ -36,15 +36,30 @@ Environment variables (all have defaults for local dev):
 
 ### Frontend (React / Vite)
 
-Node.js is not in system PATH by default. Use fnm:
+npm is on PATH directly:
 
 ```bash
-export PATH="$HOME/.local/share/fnm:$PATH" && eval "$(fnm env)"
-cd frontend && npm install && npm run dev   # port 5173
+cd frontend && npm install && npm run dev   # port 3001
 cd frontend && npm run build               # production build to dist/
 ```
 
 Vite proxies `/api` to `http://localhost:8180` in dev mode.
+
+### Services (systemd)
+
+The backend and frontend run as user-level systemd services that auto-start on boot:
+
+```bash
+# Restart backend (must rebuild JAR first — service runs from the JAR, not mvn)
+cd backend && mvn clean package -DskipTests && systemctl --user restart empire-backend
+
+# Restart frontend
+systemctl --user restart empire-frontend
+
+# Status / logs
+systemctl --user status empire-backend
+journalctl --user -u empire-backend -f
+```
 
 ## Architecture
 
