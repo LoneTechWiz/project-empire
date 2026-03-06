@@ -9,7 +9,7 @@ export default defineConfig({
     allowedHosts: ['project-empire.lonetechwiz.com'],
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8180',
         changeOrigin: true,
       }
     }
