@@ -2,9 +2,11 @@ import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
+import ResIcon from '../components/ResIcon'
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 const fmtMoney = n => '$' + Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })
+const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n)
 
 const SPY_OPS = [
   { key: 'steal_money', label: 'Steal Money', desc: 'Steal up to 5% of target treasury (max $500k).' },
@@ -142,6 +144,10 @@ export default function Military() {
     queryKey: ['military'],
     queryFn: () => api.get('/military').then(r => r.data.data),
   })
+  const { data: financeData } = useQuery({
+    queryKey: ['finances'],
+    queryFn: () => api.get('/nations/mine/finances').then(r => r.data.data),
+  })
   const [qty, setQty] = useState({})
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -238,6 +244,28 @@ export default function Military() {
       </div>
 
       {(n?.spies ?? 0) > 0 && <SpyOpsPanel spies={n.spies} />}
+
+      {financeData?.militaryUpkeep && Object.values(financeData.militaryUpkeep).some(v => Math.abs(v) > 0.001) && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>Daily Upkeep Cost</div>
+          <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12 }}>Per turn × 12 turns/day</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 24px' }}>
+            {Object.entries(financeData.militaryUpkeep).filter(([, v]) => Math.abs(v) > 0.001).map(([r, v]) => (
+              <div key={r} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <ResIcon r={r} size={22} />
+                <div>
+                  <span style={{ fontWeight: 600, color: 'var(--red)' }}>
+                    {r === 'money' ? '-$' + fmt(Math.abs(v * 12)) : fmtSign(v * 12)}
+                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 4 }}>
+                    /day
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid-2" style={{ marginTop: 16 }}>
         <div className="card">

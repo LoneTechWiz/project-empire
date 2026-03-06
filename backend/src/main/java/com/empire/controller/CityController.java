@@ -123,7 +123,7 @@ public class CityController {
         nation.setMoney(nation.getMoney() - cost);
         nationRepo.save(nation);
         City city = cityRepo.save(City.builder().nation(nation).name(cityName)
-            .infrastructure(20).land(500).population(20000).build());
+            .infrastructure(25).land(500).population(20000).build());
         activityLogRepo.save(ActivityLog.builder().nation(nation)
             .message("New city founded: " + cityName + ".").build());
         return ResponseEntity.ok(ApiResponse.ok(city));

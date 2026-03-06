@@ -95,6 +95,9 @@ public class NationController {
         milUpkeep.forEach((k, v) -> totals.merge(k, v, Double::sum));
 
         List<String> warnings = new ArrayList<>();
+        long unpoweredCount = cityBreakdown.stream().filter(e -> Boolean.FALSE.equals(e.get("powered"))).count();
+        if (unpoweredCount > 0)
+            warnings.add(unpoweredCount + " cit" + (unpoweredCount == 1 ? "y is" : "ies are") + " unpowered — production is halved. Build more power plants.");
         if (totals.getOrDefault("food", 0.0) < 0)
             warnings.add("Food deficit — your population is starving. Build farms or reduce population.");
         if (totals.getOrDefault("money", 0.0) < 0)

@@ -44,16 +44,22 @@ export default function Finance() {
 
       {/* Net summary */}
       <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ fontWeight: 600, marginBottom: 12 }}>Net Per Turn</div>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>Net Per Turn</div>
+        <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12 }}>12 turns/day — multiply by 12 for daily totals</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 24px' }}>
           {RESOURCES.filter(r => Math.abs(totals[r] || 0) > 0.001).map(r => (
             <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ color: 'var(--text2)', fontSize: 12 }}>
                 <ResIcon r={r} size={22}/>
               </span>
-              <span style={{ fontWeight: 700, fontSize: 14, ...color(totals[r]) }}>
-                {r === 'money' ? (totals[r] >= 0 ? '+$' : '-$') + fmt(Math.abs(totals[r])) : fmtSign(totals[r])}
-              </span>
+              <div>
+                <span style={{ fontWeight: 700, fontSize: 14, ...color(totals[r]) }}>
+                  {r === 'money' ? (totals[r] >= 0 ? '+$' : '-$') + fmt(Math.abs(totals[r])) : fmtSign(totals[r])}
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 4 }}>
+                  ({r === 'money' ? (totals[r] * 12 >= 0 ? '+$' : '-$') + fmt(Math.abs(totals[r] * 12)) : fmtSign(totals[r] * 12)}/day)
+                </span>
+              </div>
             </div>
           ))}
         </div>

@@ -22,6 +22,7 @@ public class TradeController {
     private final TradeHistoryRepository historyRepo;
     private final NationRepository nationRepo;
     private final UserRepository userRepo;
+    private final MessageRepository messageRepo;
 
     private Nation requireNation(UserDetails ud) {
         User user = userRepo.findByUsername(ud.getUsername()).orElseThrow();
@@ -135,6 +136,14 @@ public class TradeController {
             .seller("sell".equals(offer.getOfferType()) ? poster : fresh)
             .resource(offer.getResource()).quantity(fillQty)
             .pricePerUnit(offer.getPricePerUnit()).total(total).build());
+
+        // Notify offer poster that their offer was filled
+        String fillNote = remaining < 0.001 ? "Your offer has been fully filled." : "Your offer was partially filled — " + String.format("%.1f", remaining) + " units remain.";
+        messageRepo.save(Message.builder()
+            .sender(fresh).receiver(poster)
+            .subject("Trade Offer Filled")
+            .content(fresh.getName() + " filled " + String.format("%.1f", fillQty) + " " + offer.getResource() + " from your " + offer.getOfferType() + " offer at $" + String.format("%.2f", offer.getPricePerUnit()) + "/unit (total: $" + String.format("%.0f", total) + "). " + fillNote)
+            .build());
 
         return ResponseEntity.ok(ApiResponse.ok("Trade completed."));
     }

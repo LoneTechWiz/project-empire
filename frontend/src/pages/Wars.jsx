@@ -106,7 +106,7 @@ function useCountdown(targetMs) {
 }
 
 function WarRow({ w, attacksUsed, nextRegenAt }) {
-  const MAX_ATTACKS = 3
+  const MAX_ATTACKS = 4
   const used = attacksUsed?.[w.id] ?? 0
   const remaining = MAX_ATTACKS - used
   const regenMs = nextRegenAt?.[w.id]
@@ -139,7 +139,7 @@ function WarRow({ w, attacksUsed, nextRegenAt }) {
 }
 
 function WarCard({ w, attacksUsed, nextRegenAt }) {
-  const MAX_ATTACKS = 3
+  const MAX_ATTACKS = 4
   const used = attacksUsed?.[w.id] ?? 0
   const remaining = MAX_ATTACKS - used
   const regenMs = nextRegenAt?.[w.id]

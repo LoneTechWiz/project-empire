@@ -107,6 +107,10 @@ journalctl --user -u empire-backend -f
 - The `projects` field on `Nation` is a JSON array stored as a `TEXT` column — deserialize/serialize manually.
 - `Nation.turns` is an action-point system for war attacks. `Nation.beigeTurns` tracks remaining turns of post-war beige (protection) status.
 - **Commerce income**: `population * (commerce/100) * 1.0 / 12` per tick — the 1.0 multiplier is intentional (was deliberately increased from 0.5).
+- **Commerce cap**: Commerce rate is intentionally uncapped — players can build as many commerce improvements as slots allow. Do not add a cap.
+- **Nuclear plant cost**: Nuclear power plants are intentionally expensive (high cost, 2.4 uranium/turn). This is a deliberate design decision to make nuclear a late-game option.
+- **Starting money**: Nations start with a small amount intentionally — it is seed money to get going, not enough to buy significant assets. Do not increase it.
+- **Market prices**: Resource prices are not set by the game engine. Players/alliances set prices via trade offers. `BASE_PRICES` in `EconomyEngine` is only used for display/reference — do not auto-set market prices.
 - **Population growth per tick:** `naturalGrowth = (maxPop - pop) * 0.002 * densityFactor` where `densityFactor = min(idealDensity / popPerAcre, 1.0)` and `idealDensity = land / infra * 50`. Growth is then scaled by death rate (net zero at 10% death rate).
 - **Demolish refund:** 25% of what was actually paid for that copy — `baseCost * (1 + (count-1) * 0.5) * 0.25`, not flat 25% of base cost. Same logic in copy-to.
 - **Username login is case-insensitive** — `UserRepository` uses `findByUsernameIgnoreCase` for login and `existsByUsernameIgnoreCase` for registration. Do not change these back to the case-sensitive variants.

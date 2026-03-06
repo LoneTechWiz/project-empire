@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
+const fmtSign = n => (n >= 0 ? '+' : '') + Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
+
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 
 const RESOURCE_META = [
@@ -39,14 +41,30 @@ export default function Dashboard() {
     queryKey: ['cities'],
     queryFn: () => api.get('/cities').then(r => r.data.data),
   })
+  const { data: financeData } = useQuery({
+    queryKey: ['finances'],
+    queryFn: () => api.get('/nations/mine/finances').then(r => r.data.data),
+    enabled: !!nation,
+  })
 
   if (isLoading) return <div className="loading">Loading…</div>
   if (!data) return <div className="page">No nation found. <Link to="/nation/create">Create one</Link></div>
 
   const n = data.nation || data
+  const warnings = financeData?.warnings || []
+  const finTotals = financeData?.totals || {}
 
   return (
     <div className="page">
+      {/* Warnings */}
+      {warnings.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          {warnings.map((w, i) => (
+            <div key={i} className="alert alert-error">{w}</div>
+          ))}
+        </div>
+      )}
+
       {/* Header */}
       <div className="page-header" style={{ marginBottom: 20 }}>
         <div>
@@ -109,18 +127,31 @@ export default function Dashboard() {
             <Link to="/trade" className="btn btn-sm btn-ghost">Trade →</Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
-            {RESOURCE_META.map(({ key, label, img }) => (
-              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ color: 'var(--text2)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <img src={img} alt={label} style={{ width: 20, height: 20, objectFit: 'contain' }} />
-                  {label}
-                </span>
-                <span style={{ fontWeight: 600 }}>{fmt(n[key])}</span>
-              </div>
-            ))}
+            {RESOURCE_META.map(({ key, label, img }) => {
+              const daily = (finTotals[key] || 0) * 12
+              return (
+                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ color: 'var(--text2)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <img src={img} alt={label} style={{ width: 20, height: 20, objectFit: 'contain' }} />
+                    {label}
+                  </span>
+                  <span style={{ textAlign: 'right' }}>
+                    <span style={{ fontWeight: 600 }}>{fmt(n[key])}</span>
+                    {Math.abs(daily) > 0.01 && (
+                      <span style={{ fontSize: 10, color: daily >= 0 ? 'var(--green)' : 'var(--red)', marginLeft: 4 }}>
+                        {fmtSign(daily)}/day
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
+
+      {/* Onboarding checklist for new nations */}
+      {cityData && <OnboardingChecklist n={n} cities={cityData?.cities || cityData || []} />}
 
       {/* Quick actions */}
       <div className="card">
@@ -138,6 +169,42 @@ export default function Dashboard() {
             <Link key={to} to={to} className="btn btn-ghost btn-sm">{label}</Link>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function OnboardingChecklist({ n, cities }) {
+  const hasAlliance = !!n.alliance
+  const hasMilitary = (n.soldiers || 0) + (n.tanks || 0) + (n.aircraft || 0) > 0
+  const hasImprovement = cities.some(c =>
+    Object.keys(c).some(k => k.startsWith('imp') && c[k] > 0)
+  )
+  const hasTrade = n.money > 0
+
+  const steps = [
+    { done: cities.length > 0, label: 'Found your first city', link: '/cities' },
+    { done: hasImprovement, label: 'Build your first improvement', link: '/cities' },
+    { done: hasMilitary, label: 'Train some military units', link: '/military' },
+    { done: hasAlliance, label: 'Join an alliance', link: '/alliances' },
+  ]
+
+  const allDone = steps.every(s => s.done)
+  if (allDone) return null
+
+  return (
+    <div className="card" style={{ marginBottom: 20, borderColor: 'rgba(79,142,247,0.3)', background: 'rgba(79,142,247,0.05)' }}>
+      <div style={{ fontWeight: 700, marginBottom: 12 }}>Getting Started</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {steps.map(({ done, label, link }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 16, color: done ? 'var(--green)' : 'var(--border)' }}>{done ? '✓' : '○'}</span>
+            {done
+              ? <span style={{ color: 'var(--text2)', textDecoration: 'line-through', fontSize: 13 }}>{label}</span>
+              : <Link to={link} style={{ fontSize: 13, color: 'var(--accent)' }}>{label}</Link>
+            }
+          </div>
+        ))}
       </div>
     </div>
   )
