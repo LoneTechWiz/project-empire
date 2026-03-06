@@ -9,7 +9,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/military")
@@ -175,5 +176,85 @@ public class MilitaryController {
 
     private ResponseEntity<?> fail(String msg) {
         return ResponseEntity.badRequest().body(ApiResponse.error(msg));
+    }
+
+    // ── Spy operations ───────────────────────────────────────────────────────
+
+    @PostMapping("/spies/operation")
+    public ResponseEntity<?> spyOp(@RequestBody Map<String, Object> body,
+                                   @AuthenticationPrincipal UserDetails ud) {
+        Nation attacker = nationRepo.findById(
+            nationRepo.findByUser(userRepo.findByUsername(ud.getUsername()).orElseThrow()).orElseThrow().getId()
+        ).orElseThrow();
+
+        if (attacker.getSpies() < 1) return fail("No spies available.");
+
+        String op = (String) body.get("operation");
+        if (op == null) return fail("Operation required.");
+
+        Long targetId = Long.parseLong(body.getOrDefault("targetNationId", "0").toString());
+        Nation target = nationRepo.findById(targetId).orElse(null);
+        if (target == null) return fail("Target nation not found.");
+        if (target.getId().equals(attacker.getId())) return fail("Cannot target yourself.");
+
+        double successChance = (double) attacker.getSpies() / (attacker.getSpies() + target.getSpies() + 1);
+        boolean success = Math.random() < successChance;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", success);
+        result.put("targetNation", target.getName());
+
+        switch (op) {
+            case "steal_money" -> {
+                if (success) {
+                    double amount = Math.min(target.getMoney() * 0.05, 500000);
+                    target.setMoney(Math.max(0, target.getMoney() - amount));
+                    attacker.setMoney(attacker.getMoney() + amount);
+                    nationRepo.save(target);
+                    result.put("moneyStolen", amount);
+                    result.put("message", "Stole $" + String.format("%,.0f", amount) + " from " + target.getName() + ".");
+                } else {
+                    attacker.setSpies(Math.max(0, attacker.getSpies() - 1));
+                    result.put("message", "Operation failed. A spy was captured.");
+                }
+            }
+            case "sabotage_infra" -> {
+                if (success) {
+                    List<City> cities = cityRepo.findByNation(target);
+                    if (cities.isEmpty()) return fail("Target has no cities.");
+                    City city = cities.get(new Random().nextInt(cities.size()));
+                    double destroyed = 10 + Math.random() * 40;
+                    city.setInfrastructure(Math.max(0, city.getInfrastructure() - destroyed));
+                    cityRepo.save(city);
+                    result.put("infraDestroyed", Math.round(destroyed));
+                    result.put("city", city.getName());
+                    result.put("message", "Sabotaged " + city.getName() + ", destroying " + Math.round(destroyed) + " infrastructure.");
+                } else {
+                    attacker.setSpies(Math.max(0, attacker.getSpies() - 1));
+                    result.put("message", "Operation failed. A spy was captured.");
+                }
+            }
+            case "gather_intel" -> {
+                if (success) {
+                    Map<String, Long> intel = new LinkedHashMap<>();
+                    intel.put("soldiers", target.getSoldiers());
+                    intel.put("tanks", target.getTanks());
+                    intel.put("aircraft", target.getAircraft());
+                    intel.put("ships", target.getShips());
+                    intel.put("spies", target.getSpies());
+                    intel.put("missiles", target.getMissiles());
+                    intel.put("nukes", target.getNukes());
+                    result.put("intel", intel);
+                    result.put("message", "Intel successfully gathered on " + target.getName() + ".");
+                } else {
+                    attacker.setSpies(Math.max(0, attacker.getSpies() - 1));
+                    result.put("message", "Operation failed. A spy was captured.");
+                }
+            }
+            default -> { return fail("Unknown operation. Valid: steal_money, sabotage_infra, gather_intel."); }
+        }
+
+        nationRepo.save(attacker);
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }
