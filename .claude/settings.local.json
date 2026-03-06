@@ -22,7 +22,15 @@
       "Bash(pg_isready:*)",
       "Bash(mvn spring-boot:run:*)",
       "Bash(psql:*)",
-      "Bash(PGPASSWORD=empire psql:*)"
+      "Bash(PGPASSWORD=empire psql:*)",
+      "Bash(xargs cat:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(ps:*)",
+      "Bash(kill:*)",
+      "Bash(chmod +x:*)",
+      "Bash(crontab:*)",
+      "Bash(sudo:*)"
     ]
   }
 }
