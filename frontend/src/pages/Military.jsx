@@ -127,13 +127,13 @@ function SpyOpsPanel({ spies }) {
 }
 
 const UNITS = [
-  { key: 'soldiers',  label: 'Soldiers',  cost: '$5 + 0.01 food each' },
-  { key: 'tanks',     label: 'Tanks',     cost: '$60 + 0.5 steel + 0.1 gas' },
-  { key: 'aircraft',  label: 'Aircraft',  cost: '$4,000 + 5 alum + 5 gas' },
-  { key: 'ships',     label: 'Ships',     cost: '$50,000 + 30 steel + 20 alum' },
-  { key: 'spies',     label: 'Spies',     cost: '$50,000 each' },
-  { key: 'missiles',  label: 'Missiles',  cost: '$150k + 100 alum + 75 gas + 75 mun' },
-  { key: 'nukes',     label: 'Nukes',     cost: '$1.75M + 750 alum + 500 gas + 375 mun + 250 ura' },
+  { key: 'soldiers',  label: 'Soldiers',  cost: '$5 + 0.01 food each',                              img: '/img/icons/military/soldiers.png' },
+  { key: 'tanks',     label: 'Tanks',     cost: '$60 + 0.5 steel + 0.1 gas',                        img: '/img/icons/military/tanks.png' },
+  { key: 'aircraft',  label: 'Aircraft',  cost: '$4,000 + 5 alum + 5 gas',                          img: '/img/icons/military/aircraft.png' },
+  { key: 'ships',     label: 'Ships',     cost: '$50,000 + 30 steel + 20 alum',                     img: '/img/icons/military/ships.png' },
+  { key: 'spies',     label: 'Spies',     cost: '$50,000 each',                                      img: '/img/icons/military/spies.png' },
+  { key: 'missiles',  label: 'Missiles',  cost: '$150k + 100 alum + 75 gas + 75 mun',               img: '/img/icons/military/missiles.png' },
+  { key: 'nukes',     label: 'Nukes',     cost: '$1.75M + 750 alum + 500 gas + 375 mun + 250 ura',  img: '/img/icons/military/nukes.png' },
 ]
 
 export default function Military() {
@@ -176,9 +176,14 @@ export default function Military() {
             </tr>
           </thead>
           <tbody>
-            {UNITS.map(({ key, label, cost }) => (
+            {UNITS.map(({ key, label, cost, img }) => (
               <tr key={key}>
-                <td style={{ fontWeight: 600 }}>{label}</td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <img src={img} alt={label} style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4, background: 'var(--surface2)' }} />
+                    <span style={{ fontWeight: 600 }}>{label}</span>
+                  </div>
+                </td>
                 <td>{fmt(n?.[key] ?? 0)}</td>
                 <td>{max[key] != null ? fmt(max[key]) : '∞'}</td>
                 <td style={{ color: 'var(--text2)', fontSize: 12 }}>{cost}</td>
@@ -204,10 +209,13 @@ export default function Military() {
 
       {/* Mobile cards */}
       <div className="mobile-card-list">
-        {UNITS.map(({ key, label, cost }) => (
+        {UNITS.map(({ key, label, cost, img }) => (
           <div key={key} className="mobile-card-item">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontWeight: 600 }}>{label}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <img src={img} alt={label} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4, background: 'var(--surface2)' }} />
+                <span style={{ fontWeight: 600 }}>{label}</span>
+              </div>
               <span style={{ fontSize: 12, color: 'var(--text2)' }}>
                 {fmt(n?.[key] ?? 0)} / {max[key] != null ? fmt(max[key]) : '∞'}
               </span>

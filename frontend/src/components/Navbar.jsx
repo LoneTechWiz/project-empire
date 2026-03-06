@@ -4,10 +4,18 @@ import { useState, useEffect } from 'react'
 import api from '../api/client'
 import { useQuery } from '@tanstack/react-query'
 
-const RESOURCE_ICONS = {
-  '$': '💰', 'Food': '🌾', 'Coal': '🪨', 'Oil': '🛢', 'Iron': '⚙️',
-  'Bauxite': '🪩', 'Lead': '🔩', 'Uranium': '☢', 'Gasoline': '⛽',
-  'Munitions': '💣', 'Steel': '🔧', 'Aluminum': '✈️',
+const RESOURCE_IMGS = {
+  'Food': '/img/icons/resources/food.png',
+  'Coal': '/img/icons/resources/coal.png',
+  'Oil': '/img/icons/resources/oil.png',
+  'Iron': '/img/icons/resources/iron.png',
+  'Bauxite': '/img/icons/resources/bauxite.png',
+  'Lead': '/img/icons/resources/lead.png',
+  'Uranium': '/img/icons/resources/uranium.png',
+  'Gasoline': '/img/icons/resources/gasoline.png',
+  'Munitions': '/img/icons/resources/munitions.png',
+  'Steel': '/img/icons/resources/steel.png',
+  'Aluminum': '/img/icons/resources/aluminum.png',
 }
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
@@ -82,7 +90,10 @@ export default function Navbar() {
     <>
       {resources.map(([label, value]) => (
         <div key={label} style={{ display: 'flex', gap: 4, alignItems: 'center', whiteSpace: 'nowrap', fontSize: 12 }}>
-          <span style={{ fontSize: 13, lineHeight: 1 }}>{RESOURCE_ICONS[label]}</span>
+          {RESOURCE_IMGS[label]
+            ? <img src={RESOURCE_IMGS[label]} alt={label} style={{ width: 16, height: 16, objectFit: 'contain' }} />
+            : <span style={{ fontSize: 13, lineHeight: 1 }}>💰</span>
+          }
           <span style={{ fontWeight: 600 }}>{value}</span>
         </div>
       ))}

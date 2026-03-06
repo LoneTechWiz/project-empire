@@ -5,6 +5,24 @@ import api from '../api/client'
 
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 
+const IMP_ICONS = {
+  impCoalpower: '/img/icons/improvements/impCoalpower.png',
+  impNuclearpower: '/img/icons/improvements/impNuclearpower.png',
+  impWindpower: '/img/icons/improvements/impWindpower.png',
+  impCoalmine: '/img/icons/improvements/impCoalmine.png',
+  impOilrefinery: '/img/icons/improvements/impOilrefinery.png',
+  impSteelmill: '/img/icons/improvements/impSteelmill.png',
+  impMunitionsfactory: '/img/icons/improvements/impMunitionsfactory.png',
+  impHospital: '/img/icons/improvements/impHospital.png',
+  impSubway: '/img/icons/improvements/impSubway.png',
+  impPolicestation: '/img/icons/improvements/impPolicestation.png',
+  impRecyclingcenter: '/img/icons/improvements/impRecyclingcenter.png',
+  impSupermarket: '/img/icons/improvements/impSupermarket.png',
+  impMall: '/img/icons/improvements/impMall.png',
+  impStadium: '/img/icons/improvements/impStadium.png',
+  impBank: '/img/icons/improvements/impBank.png',
+}
+
 const IMP_LABELS = {
   impCoalpower:'Coal Power Plant', impOilpower:'Oil Power Plant', impNuclearpower:'Nuclear Power Plant', impWindpower:'Wind Power Farm',
   impCoalmine:'Coal Mine', impOilwell:'Oil Well', impIronmine:'Iron Mine', impBauxitemine:'Bauxite Mine',
@@ -201,7 +219,11 @@ export default function CityDetail() {
               const cost = (impCosts?.[imp] ?? 0) * (1 + count * 0.5)
               const noSlots = (impsUsed ?? 0) >= (impSlots ?? 0)
               return (
-                <div key={imp} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div key={imp} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
+                    {IMP_ICONS[imp] && (
+                      <img src={IMP_ICONS[imp]} alt={IMP_LABELS[imp]} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, flexShrink: 0, background: 'var(--bg)' }} />
+                    )}
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 500 }}>{IMP_LABELS[imp]}</div>
                     <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>{count} · ${fmt(cost)}</div>
@@ -214,7 +236,8 @@ export default function CityDetail() {
                       ))}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 4 }}>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                     <button className="btn btn-sm btn-ghost" disabled={count <= 0 || demolishMut.isPending} onClick={() => demolishMut.mutate(imp)}>-</button>
                     <button className="btn btn-sm" disabled={noSlots || buildMut.isPending} onClick={() => buildMut.mutate(imp)}>+</button>
                   </div>

@@ -6,27 +6,27 @@ import { useAuth } from '../context/AuthContext'
 const fmt = n => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
 
 const RESOURCE_META = [
-  { key: 'food', label: 'Food', icon: '🌾' },
-  { key: 'coal', label: 'Coal', icon: '🪨' },
-  { key: 'oil', label: 'Oil', icon: '🛢' },
-  { key: 'iron', label: 'Iron', icon: '⚙️' },
-  { key: 'bauxite', label: 'Bauxite', icon: '🪩' },
-  { key: 'lead', label: 'Lead', icon: '🔩' },
-  { key: 'uranium', label: 'Uranium', icon: '☢' },
-  { key: 'gasoline', label: 'Gasoline', icon: '⛽' },
-  { key: 'munitions', label: 'Munitions', icon: '💣' },
-  { key: 'steel', label: 'Steel', icon: '🔧' },
-  { key: 'aluminum', label: 'Aluminum', icon: '✈️' },
+  { key: 'food',      label: 'Food',      img: '/img/icons/resources/food.png' },
+  { key: 'coal',      label: 'Coal',      img: '/img/icons/resources/coal.png' },
+  { key: 'oil',       label: 'Oil',       img: '/img/icons/resources/oil.png' },
+  { key: 'iron',      label: 'Iron',      img: '/img/icons/resources/iron.png' },
+  { key: 'bauxite',   label: 'Bauxite',   img: '/img/icons/resources/bauxite.png' },
+  { key: 'lead',      label: 'Lead',      img: '/img/icons/resources/lead.png' },
+  { key: 'uranium',   label: 'Uranium',   img: '/img/icons/resources/uranium.png' },
+  { key: 'gasoline',  label: 'Gasoline',  img: '/img/icons/resources/gasoline.png' },
+  { key: 'munitions', label: 'Munitions', img: '/img/icons/resources/munitions.png' },
+  { key: 'steel',     label: 'Steel',     img: '/img/icons/resources/steel.png' },
+  { key: 'aluminum',  label: 'Aluminum',  img: '/img/icons/resources/aluminum.png' },
 ]
 
 const MILITARY_META = [
-  { key: 'soldiers', label: 'Soldiers', icon: '👥' },
-  { key: 'tanks', label: 'Tanks', icon: '🚚' },
-  { key: 'aircraft', label: 'Aircraft', icon: '✈️' },
-  { key: 'ships', label: 'Ships', icon: '🚢' },
-  { key: 'spies', label: 'Spies', icon: '🕵️' },
-  { key: 'missiles', label: 'Missiles', icon: '🚀' },
-  { key: 'nukes', label: 'Nukes', icon: '☢️' },
+  { key: 'soldiers', label: 'Soldiers', img: '/img/icons/military/soldiers.png' },
+  { key: 'tanks',    label: 'Tanks',    img: '/img/icons/military/tanks.png' },
+  { key: 'aircraft', label: 'Aircraft', img: '/img/icons/military/aircraft.png' },
+  { key: 'ships',    label: 'Ships',    img: '/img/icons/military/ships.png' },
+  { key: 'spies',    label: 'Spies',    img: '/img/icons/military/spies.png' },
+  { key: 'missiles', label: 'Missiles', img: '/img/icons/military/missiles.png' },
+  { key: 'nukes',    label: 'Nukes',    img: '/img/icons/military/nukes.png' },
 ]
 
 export default function Dashboard() {
@@ -90,9 +90,12 @@ export default function Dashboard() {
             <Link to="/military" className="btn btn-sm btn-ghost">Manage →</Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
-            {MILITARY_META.map(({ key, label, icon }) => (
-              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ color: 'var(--text2)', fontSize: 12 }}><span style={{ marginRight: 5 }}>{icon}</span>{label}</span>
+            {MILITARY_META.map(({ key, label, img }) => (
+              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ color: 'var(--text2)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <img src={img} alt={label} style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: 3 }} />
+                  {label}
+                </span>
                 <span style={{ fontWeight: 600 }}>{fmt(n[key])}</span>
               </div>
             ))}
@@ -106,9 +109,12 @@ export default function Dashboard() {
             <Link to="/trade" className="btn btn-sm btn-ghost">Trade →</Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
-            {RESOURCE_META.map(({ key, label, icon }) => (
-              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ color: 'var(--text2)', fontSize: 12 }}><span style={{ marginRight: 5 }}>{icon}</span>{label}</span>
+            {RESOURCE_META.map(({ key, label, img }) => (
+              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ color: 'var(--text2)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <img src={img} alt={label} style={{ width: 20, height: 20, objectFit: 'contain' }} />
+                  {label}
+                </span>
                 <span style={{ fontWeight: 600 }}>{fmt(n[key])}</span>
               </div>
             ))}
