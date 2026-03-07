@@ -122,7 +122,7 @@ journalctl --user -u empire-backend -f
 - **Trade fill notifications:** When a trade offer is accepted, `TradeController` sends a message to the offer poster via `MessageRepository`. `MessageRepository` is injected into `TradeController`.
 - **Finance warnings:** `NationController /mine/finances` generates warnings for: unpowered cities, food deficit, money deficit. Dashboard fetches this endpoint to show warning banners and daily production rates.
 - **Dashboard onboarding checklist:** `OnboardingChecklist` component in `Dashboard.jsx` shows first-steps for new nations (hides when all steps complete): found city → built improvement → trained military → joined alliance.
-- **Finance per-day display:** Per-turn values × 12 = per-day. Finance page shows both; Military page shows daily upkeep.
+- **Finance per-day display:** Per-turn values × 144 = per-day (144 ticks/day at 10 min/tick). Finance page shows both; Military page shows daily upkeep.
 - **War charge display:** `MAX_ATTACKS = 4` in `Wars.jsx` (both `WarRow` and `WarCard`). Backend cap is also 4.
 
 ### Frontend

@@ -145,7 +145,7 @@ public class EconomyEngine {
         return Math.max(-currentPop, growthComponent - deathLoss);
     }
 
-    /** Per-turn resource delta for one city. All values per-turn (every 2h = 1 turn, 12 turns/day). */
+    /** Per-turn resource delta for one city. All values per-turn (every 10min = 1 turn, 144 turns/day). */
     public Map<String, Double> calcCityProduction(City c, Nation nation) {
         boolean powered = isCityPowered(c);
         double powerMult = powered ? 1.0 : 0.5;

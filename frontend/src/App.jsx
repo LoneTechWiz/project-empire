@@ -57,6 +57,9 @@ export default function App() {
         <Route path="/messages" element={<Protected><Messages /></Protected>} />
         <Route path="/messages/:id" element={<Protected><MessageDetail /></Protected>} />
       </Routes>
+      <footer className="site-footer">
+        &copy; WizForge Studios
+      </footer>
     </BrowserRouter>
   )
 }

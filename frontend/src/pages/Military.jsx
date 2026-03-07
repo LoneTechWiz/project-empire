@@ -248,14 +248,14 @@ export default function Military() {
       {financeData?.militaryUpkeep && Object.values(financeData.militaryUpkeep).some(v => Math.abs(v) > 0.001) && (
         <div className="card" style={{ marginTop: 16 }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>Daily Upkeep Cost</div>
-          <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12 }}>Per turn × 12 turns/day</div>
+          <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12 }}>Per turn × 144 turns/day</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 24px' }}>
             {Object.entries(financeData.militaryUpkeep).filter(([, v]) => Math.abs(v) > 0.001).map(([r, v]) => (
               <div key={r} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <ResIcon r={r} size={22} />
                 <div>
                   <span style={{ fontWeight: 600, color: 'var(--red)' }}>
-                    {r === 'money' ? '-$' + fmt(Math.abs(v * 12)) : fmtSign(v * 12)}
+                    {r === 'money' ? '-$' + fmt(Math.abs(v * 144)) : fmtSign(v * 144)}
                   </span>
                   <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 4 }}>
                     /day

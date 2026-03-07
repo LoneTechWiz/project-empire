@@ -128,7 +128,7 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
             {RESOURCE_META.map(({ key, label, img }) => {
-              const daily = (finTotals[key] || 0) * 12
+              const daily = (finTotals[key] || 0) * 144
               return (
                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ color: 'var(--text2)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -174,19 +174,30 @@ export default function Dashboard() {
   )
 }
 
+const ALL_IMP_KEYS = [
+  'impCoalpower','impOilpower','impNuclearpower','impWindpower',
+  'impCoalmine','impOilwell','impIronmine','impBauxitemine','impLeadmine','impUraniummine','impFarm',
+  'impOilrefinery','impSteelmill','impAluminumrefinery','impMunitionsfactory',
+  'impPolicestation','impHospital','impRecyclingcenter','impSubway','impSupermarket','impBank','impMall','impStadium',
+]
+const POWER_KEYS = ['impCoalpower','impOilpower','impNuclearpower','impWindpower']
+
 function OnboardingChecklist({ n, cities }) {
   const hasAlliance = !!n.alliance
   const hasMilitary = (n.soldiers || 0) + (n.tanks || 0) + (n.aircraft || 0) > 0
-  const hasImprovement = cities.some(c =>
-    Object.keys(c).some(k => k.startsWith('imp') && c[k] > 0)
-  )
-  const hasTrade = n.money > 0
+  const cityObjs = cities.map(c => c.city || c)
+  const hasImprovement = cityObjs.some(c => ALL_IMP_KEYS.some(k => (c[k] || 0) > 0))
+  const hasPower = cityObjs.some(c => POWER_KEYS.some(k => (c[k] || 0) > 0))
+  const hasFarm = cityObjs.some(c => (c.impFarm || 0) > 0)
+  const hasSecondCity = cities.length >= 2
 
   const steps = [
-    { done: cities.length > 0, label: 'Found your first city', link: '/cities' },
     { done: hasImprovement, label: 'Build your first improvement', link: '/cities' },
-    { done: hasMilitary, label: 'Train some military units', link: '/military' },
-    { done: hasAlliance, label: 'Join an alliance', link: '/alliances' },
+    { done: hasPower,       label: 'Build a power plant to power your city', link: '/cities' },
+    { done: hasFarm,        label: 'Build a farm to feed your people', link: '/cities' },
+    { done: hasMilitary,    label: 'Train some military units', link: '/military' },
+    { done: hasAlliance,    label: 'Join an alliance', link: '/alliances' },
+    { done: hasSecondCity,  label: 'Found a second city', link: '/cities' },
   ]
 
   const allDone = steps.every(s => s.done)

@@ -45,7 +45,7 @@ export default function Finance() {
       {/* Net summary */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div style={{ fontWeight: 600, marginBottom: 4 }}>Net Per Turn</div>
-        <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12 }}>12 turns/day — multiply by 12 for daily totals</div>
+        <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12 }}>144 turns/day — multiply by 144 for daily totals</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 24px' }}>
           {RESOURCES.filter(r => Math.abs(totals[r] || 0) > 0.001).map(r => (
             <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -57,7 +57,7 @@ export default function Finance() {
                   {r === 'money' ? (totals[r] >= 0 ? '+$' : '-$') + fmt(Math.abs(totals[r])) : fmtSign(totals[r])}
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 4 }}>
-                  ({r === 'money' ? (totals[r] * 12 >= 0 ? '+$' : '-$') + fmt(Math.abs(totals[r] * 12)) : fmtSign(totals[r] * 12)}/day)
+                  ({r === 'money' ? (totals[r] * 144 >= 0 ? '+$' : '-$') + fmt(Math.abs(totals[r] * 144)) : fmtSign(totals[r] * 144)}/day)
                 </span>
               </div>
             </div>
